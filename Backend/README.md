@@ -296,3 +296,185 @@ curl -X POST http://localhost:3000/users/login \
 - The user credentials must match exactly with stored records
 - The token should be included in the Authorization header for subsequent authenticated requests
 - Tokens are valid based on the JWT_SECRET environment variable
+
+---
+
+## User Profile Endpoint
+
+### GET `/users/profile`
+
+Retrieves the authenticated user's profile information.
+
+---
+
+### Authentication Required
+
+This endpoint requires a valid JWT token in either:
+- Cookie: `token`
+- Authorization header: `Bearer <token>`
+
+---
+
+### Request Headers
+
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+or send the token via cookie from login response.
+
+---
+
+### Response
+
+#### Success Response
+
+**Status Code:** `200 OK`
+
+```json
+{
+  "_id": "user_id",
+  "fullname": {
+    "firstname": "string",
+    "lastname": "string"
+  },
+  "email": "string"
+}
+```
+
+#### Error Response - Unauthorized
+
+**Status Code:** `401 Unauthorized`
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+---
+
+### Status Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| `200` | Profile retrieved successfully |
+| `401` | Unauthorized - Invalid or missing token |
+| `500` | Internal server error |
+
+---
+
+### Example Request
+
+```bash
+curl -X GET http://localhost:3000/users/profile \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### Example Success Response
+
+```json
+{
+  "_id": "507f1f77bcf86cd799439011",
+  "fullname": {
+    "firstname": "John",
+    "lastname": "Doe"
+  },
+  "email": "john.doe@example.com"
+}
+```
+
+---
+
+### Notes
+
+- This endpoint requires authentication via JWT token
+- Returns the user data from the decoded token
+- Password is never included in the response
+
+---
+
+## User Logout Endpoint
+
+### GET `/users/logout`
+
+Logs out the authenticated user by invalidating the JWT token.
+
+---
+
+### Authentication Required
+
+This endpoint requires a valid JWT token in either:
+- Cookie: `token`
+- Authorization header: `Bearer <token>`
+
+---
+
+### Request Headers
+
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+or send the token via cookie from login response.
+
+---
+
+### Response
+
+#### Success Response
+
+**Status Code:** `200 OK`
+
+```json
+{
+  "message": "Logged Out"
+}
+```
+
+#### Error Response - Unauthorized
+
+**Status Code:** `401 Unauthorized`
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+---
+
+### Status Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| `200` | User logged out successfully |
+| `401` | Unauthorized - Invalid or missing token |
+| `500` | Internal server error |
+
+---
+
+### Example Request
+
+```bash
+curl -X GET http://localhost:3000/users/logout \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### Example Success Response
+
+```json
+{
+  "message": "Logged Out"
+}
+```
+
+---
+
+### Notes
+
+- This endpoint requires authentication via JWT token
+- Clears the authentication cookie from the client
+- Adds the token to a blacklist to prevent reuse
+- Once logged out, the token cannot be used for subsequent requests
+- Client should discard the token after receiving the success response
