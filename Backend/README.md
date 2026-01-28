@@ -478,3 +478,197 @@ curl -X GET http://localhost:3000/users/logout \
 - Adds the token to a blacklist to prevent reuse
 - Once logged out, the token cannot be used for subsequent requests
 - Client should discard the token after receiving the success response
+
+---
+
+## Captain Registration Endpoint
+
+### POST `/captains/register`
+
+Registers a new captain in the system with vehicle details and authentication.
+
+---
+
+### Request Body
+
+The endpoint expects a JSON object with the following structure:
+
+```json
+{
+  "fullname": {
+    "firstname": "string",
+    "lastname": "string"
+  },
+  "email": "string",
+  "password": "string",
+  "vehicle": {
+    "color": "string",
+    "plate": "string",
+    "capacity": "number",
+    "vehicleType": "string"
+  }
+}
+```
+
+### Field Requirements
+
+| Field | Type | Required | Validation Rules |
+|-------|------|----------|------------------|
+| `fullname.firstname` | String | Yes | Minimum 3 characters |
+| `fullname.lastname` | String | No | Minimum 3 characters (if provided) |
+| `email` | String | Yes | Must be a valid email format |
+| `password` | String | Yes | Minimum 6 characters |
+| `vehicle.color` | String | Yes | Minimum 3 characters |
+| `vehicle.plate` | String | Yes | Minimum 3 characters |
+| `vehicle.capacity` | Number | Yes | Minimum value of 1 |
+| `vehicle.vehicleType` | String | Yes | Must be one of: 'car', 'motorcycle', 'auto' |
+
+---
+
+### Response
+
+#### Success Response
+
+**Status Code:** `201 Created`
+
+```json
+{
+  "token": "JWT_TOKEN_STRING",
+  "captain": {
+    "_id": "captain_id",
+    "fullname": {
+      "firstname": "string",
+      "lastname": "string"
+    },
+    "email": "string",
+    "vehicle": {
+      "color": "string",
+      "plate": "string",
+      "capacity": "number",
+      "vehicleType": "string"
+    },
+    "status": "active"
+  }
+}
+```
+
+#### Error Response - Validation Failed
+
+**Status Code:** `400 Bad Request`
+
+```json
+{
+  "errors": [
+    {
+      "msg": "Error message",
+      "param": "field_name",
+      "location": "body"
+    }
+  ]
+}
+```
+
+#### Error Response - Captain Already Exists
+
+**Status Code:** `400 Bad Request`
+
+```json
+{
+  "message": "Captain ALready Exists!"
+}
+```
+
+---
+
+### Status Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| `201` | Captain successfully created and registered |
+| `400` | Validation error or captain already exists |
+| `500` | Internal server error |
+
+---
+
+### Example Request
+
+```bash
+curl -X POST http://localhost:3000/captains/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fullname": {
+      "firstname": "Jane",
+      "lastname": "Smith"
+    },
+    "email": "jane.smith@example.com",
+    "password": "securePassword123",
+    "vehicle": {
+      "color": "black",
+      "plate": "ABC123",
+      "capacity": 4,
+      "vehicleType": "car"
+    }
+  }'
+```
+
+### Example Success Response
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "captain": {
+    "_id": "507f1f77bcf86cd799439012",
+    "fullname": {
+      "firstname": "Jane",
+      "lastname": "Smith"
+    },
+    "email": "jane.smith@example.com",
+    "vehicle": {
+      "color": "black",
+      "plate": "ABC123",
+      "capacity": 4,
+      "vehicleType": "car"
+    },
+    "status": "active"
+  }
+}
+```
+
+### Example Error Response - Validation
+
+```json
+{
+  "errors": [
+    {
+      "msg": "Invalid Email",
+      "param": "email",
+      "location": "body"
+    },
+    {
+      "msg": "Invalid vehicle type",
+      "param": "vehicle.vehicleType",
+      "location": "body"
+    }
+  ]
+}
+```
+
+### Example Error Response - Duplicate Captain
+
+```json
+{
+  "message": "Captain ALready Exists!"
+}
+```
+
+---
+
+### Notes
+
+- The password is automatically hashed using bcrypt before storage
+- A JWT token is generated and returned upon successful registration
+- The email and vehicle plate must be unique in the system
+- Vehicle type must be one of: 'car', 'motorcycle', or 'auto'
+- Captain status is set to 'active' by default
+- The token should be stored by the client for subsequent authenticated requests
+
