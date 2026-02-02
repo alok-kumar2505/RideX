@@ -12,7 +12,6 @@ const CaptainLogin = () => {
         email:email,
         password:password
       })
-      console.log(userData)
       setEmail('')
       setPassword('')
     }
