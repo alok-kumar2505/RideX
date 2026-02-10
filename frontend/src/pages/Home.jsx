@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { use, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import "remixicon/fonts/remixicon.css";
@@ -20,6 +20,9 @@ const Home = () => {
   const confirmRidePanelRef = useRef(null);
   const [vehicleFound, setVehicleFound] = useState(false);
   const vehicleFoundRef = useRef(null);
+
+  const waitingForDriverRef = useRef(null);
+  const [waitingForDriver, setWaitingForDriver] = useState(false);
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -82,6 +85,18 @@ const Home = () => {
       });
     }
   }, [vehicleFound]);
+
+  useGSAP(() => {
+    if (waitingForDriver) {
+      gsap.to(waitingForDriverRef.current, {
+        transform: "translateY(0)",
+      });
+    } else {
+      gsap.to(waitingForDriverRef.current, {
+        transform: "translateY(100%)",
+      });
+    }
+  }, [waitingForDriver]);
 
   return (
     <div className="h-screen relative">
@@ -168,6 +183,7 @@ const Home = () => {
       >
         <ConfirmRide
           setConfirmRidePanel={setConfirmRidePanel}
+          setVehiclePanel={setVehiclePanel}
           setVehicleFound={setVehicleFound}
         />
       </div>
@@ -181,10 +197,10 @@ const Home = () => {
       </div>
 
 
-      <div
+      <div        ref={waitingForDriverRef}
         className=" fixed w-full z-20 bottom-0 px-3 py-6  bg-white pt-12"
       >
-        <WaitingForDriver/>
+        <WaitingForDriver setWaitingForDriver={setWaitingForDriver} />
       </div>
     </div>
   );
