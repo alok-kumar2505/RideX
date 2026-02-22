@@ -27,7 +27,7 @@ const CaptainLogin = () => {
       setPassword('')
     }
   return (
-   <div className="p-7 flex flex-col h-screen justify-between">
+   <div className="p-5 flex flex-col h-screen justify-between">
       <div>
         <img
           className="w-18 mb-4"
@@ -64,7 +64,7 @@ const CaptainLogin = () => {
       </div>
 
       <div>
-        <Link to="/login" className=" bg-[#d5622d] flex items-center justify-center text-white font-semibold px-4 py-2 rounded mb-5 w-full text-lg  ">
+        <Link to="/login" className="mt-6 bg-[#d5622d] flex items-center justify-center text-white font-semibold px-4 py-2 rounded mb-5 w-full text-lg  ">
           Login as User
         </Link>
       </div>

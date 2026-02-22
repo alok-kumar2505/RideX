@@ -1,0 +1,40 @@
+import React from "react";
+
+const CaptainDetails = () => {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-start gap-2">
+          <img
+            className="h-12 w-12 rounded-full object-cover"
+            src="https://m.media-amazon.com/images/M/MV5BNzI5MWI0NGMtMmMyMC00MWUzLWE4ZjktNTA3MTMyZDMxNDExXkEyXkFqcGc@._V1_.jpg"
+          />
+          <h5 className="text-lg font-medium">Millie Boby Brown</h5>
+        </div>
+        <div>
+          <h4 className="text-lg font-semibold">₹193</h4>
+          <p className="text-sm  text-gray-600">Earned</p>
+        </div>
+      </div>
+      <div className="flex mt-7 bg-gray-100 p-4 rounded-xl items-start justify-center gap-4 ">
+        <div className="text-center">
+          <i className="text-3xl mb-2 font-thin  ri-timer-2-line"></i>
+          <h5 className="text-lg font-medium">10.5</h5>
+          <p className="text-sm text-gray-600">Hours Online</p>
+        </div>
+        <div className="text-center">
+          <i className="text-3xl mb-2 font-thin ri-speed-up-line"></i>
+          <h5 className="text-lg font-medium">10.5</h5>
+          <p className="text-sm text-gray-600">Hours Online</p>
+        </div>
+        <div className="text-center">
+          <i className="text-3xl mb-2 font-thin ri-booklet-line"></i>
+          <h5 className="text-lg font-medium">10.5</h5>
+          <p className="text-sm text-gray-600">Hours Online</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CaptainDetails;
