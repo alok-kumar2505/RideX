@@ -39,8 +39,8 @@ module.exports.getDistanceAndTime = async (origin, destination) => {
             }
             if (element.status === 'OK') {
                 return {
-                    distance: element.distance.text,
-                    duration: element.duration.text
+                    distance: element.distance.value, // distance in meters
+                    duration: element.duration.value // duration in seconds
                 };
             } else {
                 throw new Error(`Distance Matrix API error: ${element.status}`);
