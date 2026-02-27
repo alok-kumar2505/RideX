@@ -67,11 +67,13 @@ module.exports.getAutoCompleteSuggestions = async (input) => {
         
         if (response.data.status === 'OK') {
             return response.data.predictions;
+        } else if (response.data.status === 'ZERO_RESULTS') {
+            return [];
         } else {
             throw new Error(`Places API error: ${response.data.status}`);
         }
     } catch (error) {
-        console.error('Error fetching autocomplete suggestions:', error);
+        console.error('Error fetching autocomplete suggestions:', error.message || error);
         throw error;
     }
 };

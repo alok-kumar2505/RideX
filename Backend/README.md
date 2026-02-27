@@ -1,16 +1,34 @@
 # API Documentation
 
+Base URL: `http://localhost:3000`
+
+All routes are mounted in `app.js`.
+
+## Health Check
+
+### GET `/`
+
+Returns a simple server response.
+
+#### Success Response
+
+**Status Code:** `200 OK`
+
+```json
+"hjey"
+```
+
+---
+
+## User Routes
+
 ## User Registration Endpoint
 
 ### POST `/users/register`
 
-Registers a new user in the system with email and password authentication.
-
----
+Registers a new user in the system.
 
 ### Request Body
-
-The endpoint expects a JSON object with the following structure:
 
 ```json
 {
@@ -32,8 +50,6 @@ The endpoint expects a JSON object with the following structure:
 | `email` | String | Yes | Must be a valid email format |
 | `password` | String | Yes | Minimum 6 characters |
 
----
-
 ### Response
 
 #### Success Response
@@ -54,7 +70,7 @@ The endpoint expects a JSON object with the following structure:
 }
 ```
 
-#### Error Response
+#### Error Response - Validation Failed
 
 **Status Code:** `400 Bad Request`
 
@@ -70,76 +86,15 @@ The endpoint expects a JSON object with the following structure:
 }
 ```
 
----
+#### Error Response - User Already Exists
 
-### Status Codes
-
-| Status Code | Description |
-|-------------|-------------|
-| `201` | User successfully created and registered |
-| `400` | Validation error - Invalid or missing required fields |
-| `500` | Internal server error |
-
----
-
-### Example Request
-
-```bash
-curl -X POST http://localhost:3000/users/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fullname": {
-      "firstname": "John",
-      "lastname": "Doe"
-    },
-    "email": "john.doe@example.com",
-    "password": "securePassword123"
-  }'
-```
-
-### Example Success Response
+**Status Code:** `400 Bad Request`
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "507f1f77bcf86cd799439011",
-    "fullname": {
-      "firstname": "John",
-      "lastname": "Doe"
-    },
-    "email": "john.doe@example.com"
-  }
+  "message": "User Already exists!"
 }
 ```
-
-### Example Error Response
-
-```json
-{
-  "errors": [
-    {
-      "msg": "Invalid Email",
-      "param": "email",
-      "location": "body"
-    },
-    {
-      "msg": "First name should be minimum of 3 characters",
-      "param": "fullname.firstname",
-      "location": "body"
-    }
-  ]
-}
-```
-
----
-
-### Notes
-
-- The password is automatically hashed using bcrypt before storage
-- A JWT token is generated and returned upon successful registration
-- The email must be unique in the system
-- The token should be stored by the client for subsequent authenticated requests
 
 ---
 
@@ -147,13 +102,9 @@ curl -X POST http://localhost:3000/users/register \
 
 ### POST `/users/login`
 
-Authenticates an existing user and returns a JWT token for subsequent requests.
-
----
+Authenticates an existing user and returns a JWT token.
 
 ### Request Body
-
-The endpoint expects a JSON object with the following structure:
 
 ```json
 {
@@ -168,8 +119,6 @@ The endpoint expects a JSON object with the following structure:
 |-------|------|----------|------------------|
 | `email` | String | Yes | Must be a valid email format |
 | `password` | String | Yes | Minimum 6 characters |
-
----
 
 ### Response
 
@@ -207,7 +156,7 @@ The endpoint expects a JSON object with the following structure:
 }
 ```
 
-#### Error Response - Invalid Credentials
+#### Error Response - User Not Found
 
 **Status Code:** `401 Unauthorized`
 
@@ -215,87 +164,13 @@ The endpoint expects a JSON object with the following structure:
 "Invalid email or password!"
 ```
 
-or
+#### Error Response - Wrong Password
+
+**Status Code:** `401 Unauthorized`
 
 ```json
 "Wrong password!"
 ```
-
----
-
-### Status Codes
-
-| Status Code | Description |
-|-------------|-------------|
-| `200` | User successfully authenticated |
-| `400` | Validation error - Invalid or missing required fields |
-| `401` | Unauthorized - Invalid email or incorrect password |
-| `500` | Internal server error |
-
----
-
-### Example Request
-
-```bash
-curl -X POST http://localhost:3000/users/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john.doe@example.com",
-    "password": "securePassword123"
-  }'
-```
-
-### Example Success Response
-
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "507f1f77bcf86cd799439011",
-    "fullname": {
-      "firstname": "John",
-      "lastname": "Doe"
-    },
-    "email": "john.doe@example.com"
-  }
-}
-```
-
-### Example Error Response - Invalid Email
-
-```json
-{
-  "errors": [
-    {
-      "msg": "Invalid Email!",
-      "param": "email",
-      "location": "body"
-    }
-  ]
-}
-```
-
-### Example Error Response - User Not Found
-
-```json
-"Invalid email or password!"
-```
-
-### Example Error Response - Wrong Password
-
-```json
-"Wrong password!"
-```
-
----
-
-### Notes
-
-- The password is verified using bcrypt comparison
-- A JWT token is generated and returned upon successful login
-- The user credentials must match exactly with stored records
-- The token should be included in the Authorization header for subsequent authenticated requests
-- Tokens are valid based on the JWT_SECRET environment variable
 
 ---
 
@@ -303,27 +178,13 @@ curl -X POST http://localhost:3000/users/login \
 
 ### GET `/users/profile`
 
-Retrieves the authenticated user's profile information.
+Retrieves the authenticated user's profile.
 
----
+### Authentication
 
-### Authentication Required
-
-This endpoint requires a valid JWT token in either:
+Requires JWT in one of:
 - Cookie: `token`
 - Authorization header: `Bearer <token>`
-
----
-
-### Request Headers
-
-```
-Authorization: Bearer <JWT_TOKEN>
-```
-
-or send the token via cookie from login response.
-
----
 
 ### Response
 
@@ -348,49 +209,9 @@ or send the token via cookie from login response.
 
 ```json
 {
-  "message": "Unauthorized"
+  "message": "Unauthorized!"
 }
 ```
-
----
-
-### Status Codes
-
-| Status Code | Description |
-|-------------|-------------|
-| `200` | Profile retrieved successfully |
-| `401` | Unauthorized - Invalid or missing token |
-| `500` | Internal server error |
-
----
-
-### Example Request
-
-```bash
-curl -X GET http://localhost:3000/users/profile \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
-### Example Success Response
-
-```json
-{
-  "_id": "507f1f77bcf86cd799439011",
-  "fullname": {
-    "firstname": "John",
-    "lastname": "Doe"
-  },
-  "email": "john.doe@example.com"
-}
-```
-
----
-
-### Notes
-
-- This endpoint requires authentication via JWT token
-- Returns the user data from the decoded token
-- Password is never included in the response
 
 ---
 
@@ -398,27 +219,12 @@ curl -X GET http://localhost:3000/users/profile \
 
 ### GET `/users/logout`
 
-Logs out the authenticated user by invalidating the JWT token.
+Logs out the user by clearing cookie and blacklisting the current token.
 
----
+### Notes
 
-### Authentication Required
-
-This endpoint requires a valid JWT token in either:
-- Cookie: `token`
-- Authorization header: `Bearer <token>`
-
----
-
-### Request Headers
-
-```
-Authorization: Bearer <JWT_TOKEN>
-```
-
-or send the token via cookie from login response.
-
----
+- This route is currently not protected by middleware.
+- For blacklist behavior, send token via cookie or Authorization header.
 
 ### Response
 
@@ -432,66 +238,17 @@ or send the token via cookie from login response.
 }
 ```
 
-#### Error Response - Unauthorized
-
-**Status Code:** `401 Unauthorized`
-
-```json
-{
-  "message": "Unauthorized"
-}
-```
-
 ---
 
-### Status Codes
-
-| Status Code | Description |
-|-------------|-------------|
-| `200` | User logged out successfully |
-| `401` | Unauthorized - Invalid or missing token |
-| `500` | Internal server error |
-
----
-
-### Example Request
-
-```bash
-curl -X GET http://localhost:3000/users/logout \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
-### Example Success Response
-
-```json
-{
-  "message": "Logged Out"
-}
-```
-
----
-
-### Notes
-
-- This endpoint requires authentication via JWT token
-- Clears the authentication cookie from the client
-- Adds the token to a blacklist to prevent reuse
-- Once logged out, the token cannot be used for subsequent requests
-- Client should discard the token after receiving the success response
-
----
+## Captain Routes
 
 ## Captain Registration Endpoint
 
 ### POST `/captains/register`
 
-Registers a new captain in the system with vehicle details and authentication.
-
----
+Registers a new captain with vehicle details.
 
 ### Request Body
-
-The endpoint expects a JSON object with the following structure:
 
 ```json
 {
@@ -504,8 +261,8 @@ The endpoint expects a JSON object with the following structure:
   "vehicle": {
     "color": "string",
     "plate": "string",
-    "capacity": "number",
-    "vehicleType": "string"
+    "capacity": 4,
+    "vehicleType": "car"
   }
 }
 ```
@@ -516,14 +273,12 @@ The endpoint expects a JSON object with the following structure:
 |-------|------|----------|------------------|
 | `fullname.firstname` | String | Yes | Minimum 3 characters |
 | `fullname.lastname` | String | No | Minimum 3 characters (if provided) |
-| `email` | String | Yes | Must be a valid email format |
+| `email` | String | Yes | Must be valid email |
 | `password` | String | Yes | Minimum 6 characters |
 | `vehicle.color` | String | Yes | Minimum 3 characters |
 | `vehicle.plate` | String | Yes | Minimum 3 characters |
-| `vehicle.capacity` | Number | Yes | Minimum value of 1 |
-| `vehicle.vehicleType` | String | Yes | Must be one of: 'car', 'motorcycle', 'auto' |
-
----
+| `vehicle.capacity` | Number | Yes | Integer, minimum 1 |
+| `vehicle.vehicleType` | String | Yes | One of `car`, `motorcycle`, `auto` |
 
 ### Response
 
@@ -544,8 +299,8 @@ The endpoint expects a JSON object with the following structure:
     "vehicle": {
       "color": "string",
       "plate": "string",
-      "capacity": "number",
-      "vehicleType": "string"
+      "capacity": 4,
+      "vehicleType": "car"
     },
     "status": "active"
   }
@@ -568,7 +323,7 @@ The endpoint expects a JSON object with the following structure:
 }
 ```
 
-#### Error Response - Captain Already Exists
+#### Error Response - Duplicate Captain
 
 **Status Code:** `400 Bad Request`
 
@@ -578,99 +333,15 @@ The endpoint expects a JSON object with the following structure:
 }
 ```
 
----
+#### Error Response - Duplicate Vehicle Plate
 
-### Status Codes
-
-| Status Code | Description |
-|-------------|-------------|
-| `201` | Captain successfully created and registered |
-| `400` | Validation error or captain already exists |
-| `500` | Internal server error |
-
----
-
-### Example Request
-
-```bash
-curl -X POST http://localhost:3000/captains/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fullname": {
-      "firstname": "Jane",
-      "lastname": "Smith"
-    },
-    "email": "jane.smith@example.com",
-    "password": "securePassword123",
-    "vehicle": {
-      "color": "black",
-      "plate": "ABC123",
-      "capacity": 4,
-      "vehicleType": "car"
-    }
-  }'
-```
-
-### Example Success Response
+**Status Code:** `400 Bad Request`
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "captain": {
-    "_id": "507f1f77bcf86cd799439012",
-    "fullname": {
-      "firstname": "Jane",
-      "lastname": "Smith"
-    },
-    "email": "jane.smith@example.com",
-    "vehicle": {
-      "color": "black",
-      "plate": "ABC123",
-      "capacity": 4,
-      "vehicleType": "car"
-    },
-    "status": "active"
-  }
+  "message": "Vehicle with this plate number is already registered!"
 }
 ```
-
-### Example Error Response - Validation
-
-```json
-{
-  "errors": [
-    {
-      "msg": "Invalid Email",
-      "param": "email",
-      "location": "body"
-    },
-    {
-      "msg": "Invalid vehicle type",
-      "param": "vehicle.vehicleType",
-      "location": "body"
-    }
-  ]
-}
-```
-
-### Example Error Response - Duplicate Captain
-
-```json
-{
-  "message": "Captain ALready Exists!"
-}
-```
-
----
-
-### Notes
-
-- The password is automatically hashed using bcrypt before storage
-- A JWT token is generated and returned upon successful registration
-- The email and vehicle plate must be unique in the system
-- Vehicle type must be one of: 'car', 'motorcycle', or 'auto'
-- Captain status is set to 'active' by default
-- The token should be stored by the client for subsequent authenticated requests
 
 ---
 
@@ -678,13 +349,9 @@ curl -X POST http://localhost:3000/captains/register \
 
 ### POST `/captains/login`
 
-Authenticates an existing captain and returns a JWT token for subsequent requests.
-
----
+Authenticates an existing captain and returns a JWT token.
 
 ### Request Body
-
-The endpoint expects a JSON object with the following structure:
 
 ```json
 {
@@ -692,15 +359,6 @@ The endpoint expects a JSON object with the following structure:
   "password": "string"
 }
 ```
-
-### Field Requirements
-
-| Field | Type | Required | Validation Rules |
-|-------|------|----------|------------------|
-| `email` | String | Yes | Must be a valid email format |
-| `password` | String | Yes | Minimum 6 characters |
-
----
 
 ### Response
 
@@ -721,30 +379,14 @@ The endpoint expects a JSON object with the following structure:
     "vehicle": {
       "color": "string",
       "plate": "string",
-      "capacity": "number",
-      "vehicleType": "string"
+      "capacity": 4,
+      "vehicleType": "car"
     }
   }
 }
 ```
 
-#### Error Response - Validation Failed
-
-**Status Code:** `400 Bad Request`
-
-```json
-{
-  "errors": [
-    {
-      "msg": "Error message",
-      "param": "field_name",
-      "location": "body"
-    }
-  ]
-}
-```
-
-#### Error Response - Invalid Credentials
+#### Error Response
 
 **Status Code:** `400 Bad Request`
 
@@ -756,74 +398,17 @@ The endpoint expects a JSON object with the following structure:
 
 ---
 
-### Status Codes
-
-| Status Code | Description |
-|-------------|-------------|
-| `200` | Captain successfully authenticated |
-| `400` | Validation error or invalid credentials |
-| `500` | Internal server error |
-
----
-
-### Example Request
-
-```bash
-curl -X POST http://localhost:3000/captains/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "jane.smith@example.com",
-    "password": "securePassword123"
-  }'
-```
-
-### Example Success Response
-
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "captain": {
-    "_id": "507f1f77bcf86cd799439012",
-    "fullname": {
-      "firstname": "Jane",
-      "lastname": "Smith"
-    },
-    "email": "jane.smith@example.com",
-    "vehicle": {
-      "color": "black",
-      "plate": "ABC123",
-      "capacity": 4,
-      "vehicleType": "car"
-    }
-  }
-}
-```
-
----
-
-### Notes
-
-- The password is verified using bcrypt comparison
-- A JWT token is generated and returned upon successful login
-- The token should be included in the Authorization header for subsequent authenticated requests
-
----
-
 ## Captain Profile Endpoint
 
 ### GET `/captains/profile`
 
-Retrieves the authenticated captain's profile information.
+Retrieves authenticated captain profile.
 
----
+### Authentication
 
-### Authentication Required
-
-This endpoint requires a valid JWT token in either:
+Requires JWT in one of:
 - Cookie: `token`
 - Authorization header: `Bearer <token>`
-
----
 
 ### Response
 
@@ -843,8 +428,8 @@ This endpoint requires a valid JWT token in either:
     "vehicle": {
       "color": "string",
       "plate": "string",
-      "capacity": "number",
-      "vehicleType": "string"
+      "capacity": 4,
+      "vehicleType": "car"
     }
   }
 }
@@ -856,57 +441,9 @@ This endpoint requires a valid JWT token in either:
 
 ```json
 {
-  "message": "Unauthorized"
+  "message": "Unauthorized!"
 }
 ```
-
----
-
-### Status Codes
-
-| Status Code | Description |
-|-------------|-------------|
-| `200` | Profile retrieved successfully |
-| `401` | Unauthorized - Invalid or missing token |
-| `500` | Internal server error |
-
----
-
-### Example Request
-
-```bash
-curl -X GET http://localhost:3000/captains/profile \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
-### Example Success Response
-
-```json
-{
-  "captain": {
-    "_id": "507f1f77bcf86cd799439012",
-    "fullname": {
-      "firstname": "Jane",
-      "lastname": "Smith"
-    },
-    "email": "jane.smith@example.com",
-    "vehicle": {
-      "color": "black",
-      "plate": "ABC123",
-      "capacity": 4,
-      "vehicleType": "car"
-    }
-  }
-}
-```
-
----
-
-### Notes
-
-- This endpoint requires authentication via JWT token
-- Returns the captain data from the decoded token
-- Password is never included in the response
 
 ---
 
@@ -914,17 +451,13 @@ curl -X GET http://localhost:3000/captains/profile \
 
 ### GET `/captains/logout`
 
-Logs out the authenticated captain by invalidating the JWT token.
+Logs out authenticated captain and blacklists token.
 
----
+### Authentication
 
-### Authentication Required
-
-This endpoint requires a valid JWT token in either:
+Requires JWT in one of:
 - Cookie: `token`
 - Authorization header: `Bearer <token>`
-
----
 
 ### Response
 
@@ -938,50 +471,269 @@ This endpoint requires a valid JWT token in either:
 }
 ```
 
-#### Error Response - Unauthorized
+---
 
-**Status Code:** `401 Unauthorized`
+## Maps Routes
+
+## Get Coordinates
+
+### GET `/maps/get-coordinates`
+
+Returns latitude/longitude for a given address.
+
+### Authentication
+
+Requires user JWT (same rules as `/users/profile`).
+
+### Query Parameters
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `address` | Yes | Full address text |
+
+### Success Response
+
+**Status Code:** `200 OK`
+
+```json
+{
+  "ltd": 28.6139,
+  "lng": 77.209
+}
+```
+
+### Error Response
+
+**Status Code:** `400 Bad Request`
+
+```json
+{
+  "errors": [
+    {
+      "msg": "Address is required",
+      "param": "address",
+      "location": "query"
+    }
+  ]
+}
+```
+
+or
+
+```json
+{
+  "message": "Co-ordinate not found"
+}
+```
+
+---
+
+## Get Distance and Time
+
+### GET `/maps/get-distance-time`
+
+Returns trip distance (meters) and duration (seconds).
+
+### Authentication
+
+Requires user JWT.
+
+### Query Parameters
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `origin` | Yes | Starting address |
+| `destination` | Yes | Destination address |
+
+### Success Response
+
+**Status Code:** `200 OK`
+
+```json
+{
+  "distance": 12345,
+  "duration": 1800
+}
+```
+
+### Error Response
+
+**Status Code:** `400 Bad Request`
+
+```json
+{
+  "errors": [
+    {
+      "msg": "Origin is required",
+      "param": "origin",
+      "location": "query"
+    }
+  ]
+}
+```
+
+or
+
+```json
+{
+  "message": "Error fetching distance and time"
+}
+```
+
+---
+
+## Get Place Suggestions
+
+### GET `/maps/get-suggestions`
+
+Returns Google Places autocomplete suggestions for input text.
+
+### Authentication
+
+Requires user JWT.
+
+### Query Parameters
+
+| Param | Required | Description |
+|-------|----------|-------------|
+| `input` | Yes | Partial place text |
+
+### Success Response
+
+**Status Code:** `200 OK`
+
+```json
+[
+  {
+    "description": "Connaught Place, New Delhi, India",
+    "place_id": "..."
+  }
+]
+```
+
+### Error Response
+
+**Status Code:** `400 Bad Request`
+
+```json
+{
+  "errors": [
+    {
+      "msg": "Input is required",
+      "param": "input",
+      "location": "query"
+    }
+  ]
+}
+```
+
+or
+
+```json
+{
+  "message": "Error fetching autocomplete suggestions"
+}
+```
+
+---
+
+## Ride Routes
+
+## Create Ride
+
+### POST `/rides/create`
+
+Creates a new ride request for an authenticated user.
+
+### Authentication
+
+Requires user JWT.
+
+### Request Body
+
+```json
+{
+  "pickup": "Rajiv Chowk, New Delhi",
+  "destination": "Noida Sector 18",
+  "vehicleType": "car"
+}
+```
+
+### Field Requirements
+
+| Field | Type | Required | Validation Rules |
+|-------|------|----------|------------------|
+| `pickup` | String | Yes | Non-empty string |
+| `destination` | String | Yes | Non-empty string |
+| `vehicleType` | String | Yes | One of `bike`, `auto`, `car` |
+
+### Success Response
+
+**Status Code:** `201 Created`
+
+```json
+{
+  "UserId": "user_id",
+  "pickup": "Rajiv Chowk, New Delhi",
+  "destination": "Noida Sector 18",
+  "status": "pending",
+  "fare": 230,
+  "_id": "ride_id",
+  "createdAt": "2026-02-25T10:00:00.000Z",
+  "updatedAt": "2026-02-25T10:00:00.000Z",
+  "__v": 0
+}
+```
+
+> Note: `otp` is generated internally but excluded from default response (`select: false`).
+
+### Error Response - Validation Failed
+
+**Status Code:** `400 Bad Request`
+
+```json
+{
+  "errors": [
+    {
+      "msg": "Vehicle type must be one of bike, auto, or car",
+      "param": "vehicleType",
+      "location": "body"
+    }
+  ]
+}
+```
+
+### Error Response - Server Error
+
+**Status Code:** `500 Internal Server Error`
+
+```json
+{
+  "error": "Error message"
+}
+```
+
+---
+
+## Common Authentication Behavior
+
+For protected routes, middleware checks:
+1. token from cookie `token` or header `Authorization: Bearer <token>`
+2. token is not blacklisted
+3. token is valid JWT and maps to an existing user/captain
+
+Typical unauthorized response:
+
+```json
+{
+  "message": "Unauthorized!"
+}
+```
+
+In blacklisted-token cases, response message may be:
 
 ```json
 {
   "message": "Unauthorized"
 }
 ```
-
----
-
-### Status Codes
-
-| Status Code | Description |
-|-------------|-------------|
-| `200` | Captain logged out successfully |
-| `401` | Unauthorized - Invalid or missing token |
-| `500` | Internal server error |
-
----
-
-### Example Request
-
-```bash
-curl -X GET http://localhost:3000/captains/logout \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
-### Example Success Response
-
-```json
-{
-  "message": "Logout Succesfully!"
-}
-```
-
----
-
-### Notes
-
-- This endpoint requires authentication via JWT token
-- Clears the authentication cookie from the client
-- Adds the token to a blacklist to prevent reuse
-- Once logged out, the token cannot be used for subsequent requests
-- Client should discard the token after receiving the success response
-

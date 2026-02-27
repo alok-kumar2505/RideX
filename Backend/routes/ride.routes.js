@@ -11,4 +11,6 @@ body("vehicleType").notEmpty().isIn(["bike","auto","car"]).withMessage("Vehicle 
 rideController.createRide
 );
 
+router.get("/get-fare",authMiddleware.authUser,rideController.getFare);
+
 module.exports=router;
