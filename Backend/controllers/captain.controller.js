@@ -64,7 +64,7 @@ module.exports.loginCaptain=async(req,res,next)=>{
 }
 
 module.exports.getCaptainProfile=async(req,res)=>{
-    console.log(req.captain);
+    // console.log(req.captain);
     res.status(200).json({captain:req.captain});
 }
 

@@ -22,7 +22,7 @@ const UserProtectWrapper = ({children}) => {
             Authorization: `Bearer ${token}`
           }
         }).then(response=>{
-          setUser(response.data.user);
+          setUser(response.data);
           setIsLoading(false);
         }).catch(error=>{
           console.log(error);

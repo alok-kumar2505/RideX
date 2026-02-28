@@ -8,6 +8,9 @@ import ConfirmRide from "../components/ConfirmRide";
 import LookingForDriver from "../components/LookingForDriver";
 import WaitingForDriver from "../components/WaitingForDriver";
 import axios from "axios";
+import { SocketContext } from "../context/SocketContext";
+import { useContext } from "react";
+import {UserDataContext} from "../context/UserContext";
 
 const Home = () => {
   const [pickupLocation, setPickupLocation] = useState("");
@@ -32,6 +35,10 @@ const Home = () => {
   const [waitingForDriver, setWaitingForDriver] = useState(false);
   const [fare, setFare] = useState({});
   const [vehicleType, setVehicleType] = useState(null);
+
+  const {socket}=useContext(SocketContext);
+  const {user}=useContext(UserDataContext);
+
 
   const fetchFare = async (pickup, destination) => {
     try {
@@ -87,6 +94,9 @@ const Home = () => {
   };
 
   useEffect(() => {
+
+    socket.emit("join",{userId:user._id,userType:"user"});
+
     const isPickupField = activeField === "pickup";
     const currentQuery = isPickupField ? pickupLocation : destination;
     const setSuggestions = isPickupField
@@ -123,7 +133,7 @@ const Home = () => {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [pickupLocation, destination, activeField]);
+  }, [pickupLocation, destination, activeField, user]);
 
   const activeSuggestions =
     activeField === "pickup" ? pickupSuggestions : destinationSuggestions;
