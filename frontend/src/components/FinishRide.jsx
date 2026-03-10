@@ -23,7 +23,7 @@ const FinishRide = (props) => {
             className="h-12 w-12 rounded-full object-cover "
             src="https://cdn.create.vista.com/api/media/small/64961499/stock-photo-beautiful-young-woman-selfie-in-the-park"
           />
-          <h2 className="text-lg font-medium">Maria kane</h2>
+          <h2 className="text-lg font-medium capitalize">{props.rideData?.user.fullname.firstname}</h2>
         </div>
         <h5 className="text-lg font-semibold">3.2km</h5>
       </div>
@@ -32,25 +32,21 @@ const FinishRide = (props) => {
           <div className="flex items-center space-x-3 mb-3 border-b-2 border-gray-200 p-2">
             <i className="text-lg ri-map-pin-user-fill"></i>
             <div>
-              <h3 className="text-lg font-medium">562/11-A</h3>
-              <p className="text-gray-600 text-sm -mt-1">
-                Kankariya Talab, Ahemdabad
-              </p>
+              <h3 className="text-lg font-medium">{props.rideData?.pickup}</h3>
+              
             </div>
           </div>
           <div className="flex items-center space-x-3 mb-3 border-b-2 border-gray-200 p-2">
             <i className="text-lg ri-map-pin-fill"></i>
             <div>
-              <h3 className="text-lg font-medium">562/11-A</h3>
-              <p className="text-gray-600 text-sm -mt-1">
-                Kankariya Talab, Ahemdabad
-              </p>
+              <h3 className="text-lg font-medium">{props.rideData?.destination}</h3>
+              
             </div>
           </div>
           <div className="flex items-center space-x-3 mb-3 px-2">
             <i className="text-lg ri-currency-line"></i>
             <div>
-              <h3 className="text-lg font-medium">₹193</h3>
+              <h3 className="text-lg font-medium">₹{props.rideData?.fare}</h3>
 
               <p className="text-gray-600 text-sm -mt-1">Cash Cash</p>
             </div>

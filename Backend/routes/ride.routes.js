@@ -1,6 +1,6 @@
 const express = require('express');
 const router=express.Router();
-const {body}=require('express-validator');
+const {body, query}=require('express-validator');
 const rideController=require('../controllers/ride.controller');
 const authMiddleware=require('../Middleware/aut.middleware');
 
@@ -11,6 +11,17 @@ body("vehicleType").notEmpty().isIn(["bike","auto","car"]).withMessage("Vehicle 
 rideController.createRide
 );
 
-router.get("/get-fare",authMiddleware.authUser,rideController.getFare);
+router.get("/get-fare",authMiddleware.authUser,
+    query("pickup").notEmpty().isString().withMessage("Pickup location is required"),
+    query("destination").notEmpty().isString().withMessage("Destination is required"),
+    rideController.getFare);
 
+
+router.post("/confirm",authMiddleware.authCaptain,
+body("rideId").notEmpty().isString().withMessage("Ride ID is required"),
+rideController.confirmRide);
+
+router.get("/start-ride",authMiddleware.authCaptain,query("rideId").notEmpty().isString().withMessage("Ride ID is required"),
+query("otp").notEmpty().isString().isLength({ max: 6,min: 6 }).withMessage("OTP must be a 6-character string"),
+rideController.startRide);
 module.exports=router;

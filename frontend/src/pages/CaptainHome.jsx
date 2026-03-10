@@ -10,20 +10,27 @@ import { CaptainDataContext } from "../context/CaptainContext";
 import { useContext } from "react";
 import { SocketContext } from "../context/SocketContext";
 import { useEffect } from "react";
+import axios from "axios";
 
 const CaptainHome = () => {
-  const [ridePopupPanel, setRidePopupPanel] = useState(true);
+  const [ridePopupPanel, setRidePopupPanel] = useState(false);
   const [confirmRidePopupPanel, setConfirmRidePopupPanel] = useState(false);
   const ridePopupPanelRef = useRef(null);
   const confirmRidePopupPanelRef = useRef(null);
   const { captain } = useContext(CaptainDataContext);
   const { socket } = useContext(SocketContext);
+  const [ride,SetRide]=useState(null)
+  
 
   useEffect(() => {
-    socket.emit("join", { userId: captain._id, userType: "captain" });
+    if (!captain?._id || !socket) {
+      console.log('⏳ Waiting for captain or socket...', {captain: !!captain, socket: !!socket});
+      return;
+    }
+        socket.emit("join", { userId: captain._id, userType: "captain" });
+    
     const updateLocation = () => {
       navigator.geolocation.getCurrentPosition((position) => {
-        console.log(position);
         socket.emit("update-location-captain", {
           userId: captain._id,
           location: {
@@ -37,7 +44,28 @@ const CaptainHome = () => {
     updateLocation(); // Initial location update on component mount
 
     return () => clearInterval(locationInterval);
-  }, [captain._id, socket]);
+  }, []);
+
+
+    socket.on("new-ride", (data) => {
+      console.log("📩 New ride received:", data.user);
+      SetRide(data);
+      setRidePopupPanel(true);
+    });
+
+    async function confirmRide() {
+      try {
+        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/rides/confirm`, {
+          rideId: ride._id,
+          captainId: captain._id
+        },{headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }});
+        console.log("✅ Ride confirmed:", response.data);
+      } catch (error) {
+        console.error("Error confirming ride:", error);
+      }
+    }
 
   useGSAP(() => {
     if (ridePopupPanel) {
@@ -93,8 +121,11 @@ const CaptainHome = () => {
          z-20 bottom-0 px-3 py-10  translate-y-full bg-white pt-12"
       >
         <RidePopUp
+          ride={ride}
           setRidePopupPanel={setRidePopupPanel}
           setConfirmRidePopupPanel={setConfirmRidePopupPanel}
+          confirmRide={confirmRide}
+
         />
       </div>
       <div
@@ -103,6 +134,7 @@ const CaptainHome = () => {
          z-20 bottom-0 px-3 py-10  translate-y-full bg-white pt-12"
       >
         <ConfirmRidePopUp
+          ride={ride}
           setConfirmRidePopupPanel={setConfirmRidePopupPanel}
           setRidePopupPanel={setRidePopupPanel}
         />

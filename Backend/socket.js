@@ -17,14 +17,15 @@ function initializeSocket(server) {
 
     socket.on('join',async(data)=>{
         const {userId,userType}=data;
-        console.log(data);
+        
 
         if(userType==="user"){
-            const user=await userModel.findByIdAndUpdate(userId,{socketId:socket.id});
+            const user=await userModel.findByIdAndUpdate(userId,{socketId:socket.id}, {new: true});
+            // console.log(`User ${userId} joined with socket ID: ${socket.id}`);
             
         }else if(userType==="captain"){
-            const captain=await captainModel.findByIdAndUpdate(userId,{socketId:socket.id});
-            console.log(captain);
+            const captain=await captainModel.findByIdAndUpdate(userId,{socketId:socket.id}, {new: true});
+            // console.log(`Captain ${userId} joined with socket ID: ${socket.id}`);
         }
     });
 
@@ -33,10 +34,7 @@ function initializeSocket(server) {
       const lat = Number(location?.ltd);
       const lng = Number(location?.lng);
 
-      if(!Number.isFinite(lat) || !Number.isFinite(lng)){
-            return socket.emit("error","Invalid location data");   
-            
-        }
+      
        
         const captain = await captainModel.findByIdAndUpdate(userId,{location:{
         ltd: lat,
@@ -52,12 +50,20 @@ function initializeSocket(server) {
   
 }
 
-function sendMessageToSocketId(socketId, event, message) {
-  if (!io) {
-    throw new Error("Socket.io is not initialized. Call initializeSocket(server) first.");
-  }
+const sendMessageToSocketId = (socketId, messageObject) => {
 
-  io.to(socketId).emit(event, message);
+console.log('🔔 Attempting to send:', messageObject.event, 'to socketId:', socketId);
+
+    if (!socketId) {
+        console.log('Cannot send message - socketId is null/undefined');
+        return;
+    }
+
+    if(io){
+      io.to(socketId).emit(messageObject.event, messageObject.data);
+    }else{
+      console.log('Socket.io server instance (io) is not initialized');
+    }
 }
 
 module.exports = {

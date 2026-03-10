@@ -1,7 +1,11 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link,useLocation } from "react-router-dom";
 
 const Riding = () => {
+  const location = useLocation();
+  const {ride} =location.state || {}; 
+  console.log("🚗 Ride data in Riding component:", ride);
+
   return (
 <div className="h-screen">
   <Link to="/home" className="fixed h-10 w-10 bg-white flex items-center justify-center rounded-full top-3 left-5 z-30">
@@ -21,9 +25,9 @@ const Riding = () => {
           />
 
           <div className="text-right">
-            <h2 className="text-lg font-medium">Alok</h2>
-            <h4 className="text-xl font-semibold -mt-1 -mb-1">BR05 AV 1933</h4>
-            <p className="text-sm text-gray-600">Maruti Suzuti alto</p>
+            <h2 className="text-lg font-medium capitalize">{ride?.captain?.fullname?.firstname}</h2>
+            <h4 className="text-xl font-semibold -mt-1 -mb-1 uppercase">{ride?.captain?.vehicle?.plate}</h4>
+            {/* <p className="text-sm text-gray-600">Maruti Suzuti alto</p> */}
           </div>
         </div>
         <div className="flex flex-col  items-center p-2 ">
@@ -32,16 +36,16 @@ const Riding = () => {
             <div className="flex items-center space-x-3 mb-3 border-b-2 border-gray-200 p-2">
               <i className="text-lg ri-map-pin-fill"></i>
               <div>
-                <h3 className="text-lg font-medium">562/11-A</h3>
-                <p className="text-gray-600 text-sm -mt-1">
+                <h3 className="text-lg font-medium">{ride?.destination}</h3>
+                {/* <p className="text-gray-600 text-sm -mt-1">
                   Kankariya Talab, Ahemdabad
-                </p>
+                </p> */}
               </div>
             </div>
             <div className="flex items-center space-x-3 mb-3 px-2">
               <i className="text-lg ri-currency-line"></i>
               <div>
-                <h3 className="text-lg font-medium">₹193</h3>
+                <h3 className="text-lg font-medium">₹{ride?.fare}</h3>
 
                 <p className="text-gray-600 text-sm -mt-1">Cash Cash</p>
               </div>

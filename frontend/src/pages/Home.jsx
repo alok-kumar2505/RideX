@@ -11,6 +11,7 @@ import axios from "axios";
 import { SocketContext } from "../context/SocketContext";
 import { useContext } from "react";
 import {UserDataContext} from "../context/UserContext";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const [pickupLocation, setPickupLocation] = useState("");
@@ -35,9 +36,27 @@ const Home = () => {
   const [waitingForDriver, setWaitingForDriver] = useState(false);
   const [fare, setFare] = useState({});
   const [vehicleType, setVehicleType] = useState(null);
+  const [ride, setRide] = useState(null);
 
   const {socket}=useContext(SocketContext);
   const {user}=useContext(UserDataContext);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    socket.emit("join", { userId: user._id, userType: "user" });
+  }, [user]);
+
+  socket.on("ride-confirmed",(ride)=>{
+    setVehicleFound(false);
+    setConfirmRidePanel(false);
+    setWaitingForDriver(true);
+    setRide(ride);
+  });
+
+  socket.on("ride-started",(ride)=>{
+    setWaitingForDriver(false);
+    navigate("/riding",{state:{ride}});
+  });
 
 
   const fetchFare = async (pickup, destination) => {
@@ -93,10 +112,9 @@ const Home = () => {
     setVehiclePanel(true);
   };
 
+  
+
   useEffect(() => {
-
-    socket.emit("join",{userId:user._id,userType:"user"});
-
     const isPickupField = activeField === "pickup";
     const currentQuery = isPickupField ? pickupLocation : destination;
     const setSuggestions = isPickupField
@@ -133,7 +151,7 @@ const Home = () => {
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [pickupLocation, destination, activeField, user]);
+  }, [pickupLocation, destination, activeField]);
 
   const activeSuggestions =
     activeField === "pickup" ? pickupSuggestions : destinationSuggestions;
@@ -159,6 +177,8 @@ const Home = () => {
     setPanelOpen(false);
     setVehiclePanel(true);
   };
+
+
 
   useGSAP(() => {
     if (panelOpen) {
@@ -386,9 +406,13 @@ const Home = () => {
 
       <div
         ref={waitingForDriverRef}
-        className=" fixed w-full z-20 bottom-0 px-3 py-6  bg-white pt-12"
+        className=" fixed w-full z-20 bottom-0 px-3 py-6 translate-y-full bg-white pt-12"
       >
-        <WaitingForDriver setWaitingForDriver={setWaitingForDriver} />
+        <WaitingForDriver
+          ride={ride}
+          vehicleType={vehicleType}
+          setWaitingForDriver={setWaitingForDriver}
+        />
       </div>
     </div>
   );
