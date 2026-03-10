@@ -101,3 +101,27 @@ module.exports.startRide = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+module.exports.endRide = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  try {
+    const { rideId } = req.body;
+    const ride = await rideService.endRide({rideId, captain: req.captain});
+
+    if (!ride || !ride.user) {
+      return res.status(500).json({ error: "Failed to end ride" });
+    }
+
+    sendMessageToSocketId(ride.user.socketId, {
+      event: "ride-ended",
+      data: ride,
+     });
+    return res.status(200).json(ride);
+  } catch (error) {
+    console.error("Error ending ride:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};

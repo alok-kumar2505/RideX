@@ -1,10 +1,18 @@
-import React from "react";
-import { Link,useLocation } from "react-router-dom";
+import { Link,useLocation,useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { SocketContext } from "../context/SocketContext";
+import LiveTracking from "../components/LiveTracking";
+
 
 const Riding = () => {
   const location = useLocation();
+  const {socket} = useContext(SocketContext);
   const {ride} =location.state || {}; 
-  console.log("🚗 Ride data in Riding component:", ride);
+  const navigate = useNavigate();
+
+  socket.on("ride-ended",(ride)=>{
+    navigate("/home");
+  });
 
   return (
 <div className="h-screen">
@@ -12,10 +20,7 @@ const Riding = () => {
     <i className="text-lg font-bold ri-home-5-line"></i>
   </Link>
   <div className="h-1/2 ">
-        <img
-          className="h-full w-full object-cover"
-          src="https://miro.medium.com/v2/resize:fit:1400/0*gwMx05pqII5hbfmX.gif"
-        />
+        <LiveTracking/>
       </div>
       <div className="h-1/2 p-4">
         <div className="flex items-center justify-between">

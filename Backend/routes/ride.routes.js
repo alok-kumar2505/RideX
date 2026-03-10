@@ -24,4 +24,8 @@ rideController.confirmRide);
 router.get("/start-ride",authMiddleware.authCaptain,query("rideId").notEmpty().isString().withMessage("Ride ID is required"),
 query("otp").notEmpty().isString().isLength({ max: 6,min: 6 }).withMessage("OTP must be a 6-character string"),
 rideController.startRide);
+
+
+router.post("/end-ride",authMiddleware.authCaptain,body("rideId").isMongoId().notEmpty().isString().withMessage("Ride ID is required"),
+rideController.endRide);
 module.exports=router;

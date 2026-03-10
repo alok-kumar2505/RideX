@@ -12,6 +12,7 @@ import { SocketContext } from "../context/SocketContext";
 import { useContext } from "react";
 import {UserDataContext} from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
+import LiveTracking from "../components/LiveTracking";
 
 const Home = () => {
   const [pickupLocation, setPickupLocation] = useState("");
@@ -57,6 +58,8 @@ const Home = () => {
     setWaitingForDriver(false);
     navigate("/riding",{state:{ride}});
   });
+
+ 
 
 
   const fetchFare = async (pickup, destination) => {
@@ -280,10 +283,7 @@ const Home = () => {
       />
 
       <div className="h-screen w-screen">
-        <img
-          className="h-full w-full object-cover "
-          src="https://miro.medium.com/v2/resize:fit:1400/0*gwMx05pqII5hbfmX.gif"
-        />
+        <LiveTracking/>
       </div>
 
       <div className="flex flex-col justify-end h-screen absolute top-0 w-full ">
