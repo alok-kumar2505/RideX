@@ -1,553 +1,114 @@
-# API Documentation
+# RideX Backend
+
+Backend API for RideX ride-hailing platform built with Node.js, Express, MongoDB, and Socket.io.
+
+## Tech Stack
+
+![Node.js](https://img.shields.io/badge/Node.js-Runtime-339933?logo=node.js)
+![Express](https://img.shields.io/badge/Express-5.2.1-000000?logo=express)
+![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb)
+![Socket.io](https://img.shields.io/badge/Socket.io-4.8.1-010101?logo=socket.io)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?logo=jsonwebtokens)
+![Google Maps](https://img.shields.io/badge/Google%20Maps-API-4285F4?logo=googlemaps)
+
+## Project Structure
+
+```text
+Backend/
+├── controllers/
+├── db/
+├── Middleware/
+├── models/
+├── routes/
+├── services/
+├── app.js
+├── server.js
+└── socket.js
+```
+
+## Environment Variables
+
+Create a `.env` file inside `Backend/`:
+
+```env
+PORT=3000
+DB_CONNECT=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+GOOGLE_MAPS_API=your_google_maps_api_key
+```
+
+## Installation and Run
+
+```bash
+cd Backend
+npm install
+node server.js
+```
 
 Base URL: `http://localhost:3000`
 
-All routes are mounted in `app.js`.
+## API Routes
 
-## Health Check
+### User Routes
 
-### GET `/`
+- `POST /users/register`
+- `POST /users/login`
+- `GET /users/profile` (protected)
+- `GET /users/logout`
 
-Returns a simple server response.
+### Captain Routes
 
-#### Success Response
+- `POST /captains/register`
+- `POST /captains/login`
+- `GET /captains/profile` (protected)
+- `GET /captains/logout` (protected)
 
-**Status Code:** `200 OK`
+### Maps Routes
 
-```json
-"hjey"
-```
+- `GET /maps/get-coordinates` (protected user route)
+- `GET /maps/get-distance-time` (protected user route)
+- `GET /maps/get-suggestions` (protected user route)
 
----
+### Ride Routes
 
-## User Routes
+- `POST /rides/create` (protected user route)
+- `GET /rides/get-fare` (protected user route)
+- `POST /rides/confirm` (protected captain route)
+- `GET /rides/start-ride` (protected captain route)
+- `POST /rides/end-ride` (protected captain route)
 
-## User Registration Endpoint
+## Realtime Events (Socket.io)
 
-### POST `/users/register`
+### Client -> Server
 
-Registers a new user in the system.
+- `join`
+- `update-location-captain`
 
-### Request Body
+### Server -> Client
 
-```json
-{
-  "fullname": {
-    "firstname": "string",
-    "lastname": "string"
-  },
-  "email": "string",
-  "password": "string"
-}
-```
+- `new-ride`
+- `ride-confirmed`
+- `ride-started`
+- `ride-ended`
 
-### Field Requirements
+## Auth Notes
 
-| Field | Type | Required | Validation Rules |
-|-------|------|----------|------------------|
-| `fullname.firstname` | String | Yes | Minimum 3 characters |
-| `fullname.lastname` | String | No | Minimum 3 characters (if provided) |
-| `email` | String | Yes | Must be a valid email format |
-| `password` | String | Yes | Minimum 6 characters |
+Protected APIs accept token via:
 
-### Response
-
-#### Success Response
-
-**Status Code:** `201 Created`
-
-```json
-{
-  "token": "JWT_TOKEN_STRING",
-  "user": {
-    "_id": "user_id",
-    "fullname": {
-      "firstname": "string",
-      "lastname": "string"
-    },
-    "email": "string"
-  }
-}
-```
-
-#### Error Response - Validation Failed
-
-**Status Code:** `400 Bad Request`
-
-```json
-{
-  "errors": [
-    {
-      "msg": "Error message",
-      "param": "field_name",
-      "location": "body"
-    }
-  ]
-}
-```
-
-#### Error Response - User Already Exists
-
-**Status Code:** `400 Bad Request`
-
-```json
-{
-  "message": "User Already exists!"
-}
-```
-
----
-
-## User Login Endpoint
-
-### POST `/users/login`
-
-Authenticates an existing user and returns a JWT token.
-
-### Request Body
-
-```json
-{
-  "email": "string",
-  "password": "string"
-}
-```
-
-### Field Requirements
-
-| Field | Type | Required | Validation Rules |
-|-------|------|----------|------------------|
-| `email` | String | Yes | Must be a valid email format |
-| `password` | String | Yes | Minimum 6 characters |
-
-### Response
-
-#### Success Response
-
-**Status Code:** `200 OK`
-
-```json
-{
-  "token": "JWT_TOKEN_STRING",
-  "user": {
-    "_id": "user_id",
-    "fullname": {
-      "firstname": "string",
-      "lastname": "string"
-    },
-    "email": "string"
-  }
-}
-```
-
-#### Error Response - Validation Failed
-
-**Status Code:** `400 Bad Request`
-
-```json
-{
-  "errors": [
-    {
-      "msg": "Error message",
-      "param": "field_name",
-      "location": "body"
-    }
-  ]
-}
-```
-
-#### Error Response - User Not Found
-
-**Status Code:** `401 Unauthorized`
-
-```json
-"Invalid email or password!"
-```
-
-#### Error Response - Wrong Password
-
-**Status Code:** `401 Unauthorized`
-
-```json
-"Wrong password!"
-```
-
----
-
-## User Profile Endpoint
-
-### GET `/users/profile`
-
-Retrieves the authenticated user's profile.
-
-### Authentication
-
-Requires JWT in one of:
 - Cookie: `token`
-- Authorization header: `Bearer <token>`
+- Header: `Authorization: Bearer <token>`
 
-### Response
+Blacklisted tokens are rejected.
 
-#### Success Response
+## Author
 
-**Status Code:** `200 OK`
+Alok Kumar  
+GitHub: https://github.com/alok-kumar2505
 
-```json
-{
-  "_id": "user_id",
-  "fullname": {
-    "firstname": "string",
-    "lastname": "string"
-  },
-  "email": "string"
-}
-```
+- `origin` (required)
+- `destination` (required)
 
-#### Error Response - Unauthorized
-
-**Status Code:** `401 Unauthorized`
-
-```json
-{
-  "message": "Unauthorized!"
-}
-```
-
----
-
-## User Logout Endpoint
-
-### GET `/users/logout`
-
-Logs out the user by clearing cookie and blacklisting the current token.
-
-### Notes
-
-- This route is currently not protected by middleware.
-- For blacklist behavior, send token via cookie or Authorization header.
-
-### Response
-
-#### Success Response
-
-**Status Code:** `200 OK`
-
-```json
-{
-  "message": "Logged Out"
-}
-```
-
----
-
-## Captain Routes
-
-## Captain Registration Endpoint
-
-### POST `/captains/register`
-
-Registers a new captain with vehicle details.
-
-### Request Body
-
-```json
-{
-  "fullname": {
-    "firstname": "string",
-    "lastname": "string"
-  },
-  "email": "string",
-  "password": "string",
-  "vehicle": {
-    "color": "string",
-    "plate": "string",
-    "capacity": 4,
-    "vehicleType": "car"
-  }
-}
-```
-
-### Field Requirements
-
-| Field | Type | Required | Validation Rules |
-|-------|------|----------|------------------|
-| `fullname.firstname` | String | Yes | Minimum 3 characters |
-| `fullname.lastname` | String | No | Minimum 3 characters (if provided) |
-| `email` | String | Yes | Must be valid email |
-| `password` | String | Yes | Minimum 6 characters |
-| `vehicle.color` | String | Yes | Minimum 3 characters |
-| `vehicle.plate` | String | Yes | Minimum 3 characters |
-| `vehicle.capacity` | Number | Yes | Integer, minimum 1 |
-| `vehicle.vehicleType` | String | Yes | One of `car`, `motorcycle`, `auto` |
-
-### Response
-
-#### Success Response
-
-**Status Code:** `201 Created`
-
-```json
-{
-  "token": "JWT_TOKEN_STRING",
-  "captain": {
-    "_id": "captain_id",
-    "fullname": {
-      "firstname": "string",
-      "lastname": "string"
-    },
-    "email": "string",
-    "vehicle": {
-      "color": "string",
-      "plate": "string",
-      "capacity": 4,
-      "vehicleType": "car"
-    },
-    "status": "active"
-  }
-}
-```
-
-#### Error Response - Validation Failed
-
-**Status Code:** `400 Bad Request`
-
-```json
-{
-  "errors": [
-    {
-      "msg": "Error message",
-      "param": "field_name",
-      "location": "body"
-    }
-  ]
-}
-```
-
-#### Error Response - Duplicate Captain
-
-**Status Code:** `400 Bad Request`
-
-```json
-{
-  "message": "Captain ALready Exists!"
-}
-```
-
-#### Error Response - Duplicate Vehicle Plate
-
-**Status Code:** `400 Bad Request`
-
-```json
-{
-  "message": "Vehicle with this plate number is already registered!"
-}
-```
-
----
-
-## Captain Login Endpoint
-
-### POST `/captains/login`
-
-Authenticates an existing captain and returns a JWT token.
-
-### Request Body
-
-```json
-{
-  "email": "string",
-  "password": "string"
-}
-```
-
-### Response
-
-#### Success Response
-
-**Status Code:** `200 OK`
-
-```json
-{
-  "token": "JWT_TOKEN_STRING",
-  "captain": {
-    "_id": "captain_id",
-    "fullname": {
-      "firstname": "string",
-      "lastname": "string"
-    },
-    "email": "string",
-    "vehicle": {
-      "color": "string",
-      "plate": "string",
-      "capacity": 4,
-      "vehicleType": "car"
-    }
-  }
-}
-```
-
-#### Error Response
-
-**Status Code:** `400 Bad Request`
-
-```json
-{
-  "message": "Invalid email or password"
-}
-```
-
----
-
-## Captain Profile Endpoint
-
-### GET `/captains/profile`
-
-Retrieves authenticated captain profile.
-
-### Authentication
-
-Requires JWT in one of:
-- Cookie: `token`
-- Authorization header: `Bearer <token>`
-
-### Response
-
-#### Success Response
-
-**Status Code:** `200 OK`
-
-```json
-{
-  "captain": {
-    "_id": "captain_id",
-    "fullname": {
-      "firstname": "string",
-      "lastname": "string"
-    },
-    "email": "string",
-    "vehicle": {
-      "color": "string",
-      "plate": "string",
-      "capacity": 4,
-      "vehicleType": "car"
-    }
-  }
-}
-```
-
-#### Error Response - Unauthorized
-
-**Status Code:** `401 Unauthorized`
-
-```json
-{
-  "message": "Unauthorized!"
-}
-```
-
----
-
-## Captain Logout Endpoint
-
-### GET `/captains/logout`
-
-Logs out authenticated captain and blacklists token.
-
-### Authentication
-
-Requires JWT in one of:
-- Cookie: `token`
-- Authorization header: `Bearer <token>`
-
-### Response
-
-#### Success Response
-
-**Status Code:** `200 OK`
-
-```json
-{
-  "message": "Logout Succesfully!"
-}
-```
-
----
-
-## Maps Routes
-
-## Get Coordinates
-
-### GET `/maps/get-coordinates`
-
-Returns latitude/longitude for a given address.
-
-### Authentication
-
-Requires user JWT (same rules as `/users/profile`).
-
-### Query Parameters
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `address` | Yes | Full address text |
-
-### Success Response
-
-**Status Code:** `200 OK`
-
-```json
-{
-  "ltd": 28.6139,
-  "lng": 77.209
-}
-```
-
-### Error Response
-
-**Status Code:** `400 Bad Request`
-
-```json
-{
-  "errors": [
-    {
-      "msg": "Address is required",
-      "param": "address",
-      "location": "query"
-    }
-  ]
-}
-```
-
-or
-
-```json
-{
-  "message": "Co-ordinate not found"
-}
-```
-
----
-
-## Get Distance and Time
-
-### GET `/maps/get-distance-time`
-
-Returns trip distance (meters) and duration (seconds).
-
-### Authentication
-
-Requires user JWT.
-
-### Query Parameters
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `origin` | Yes | Starting address |
-| `destination` | Yes | Destination address |
-
-### Success Response
-
-**Status Code:** `200 OK`
+Success `200`:
 
 ```json
 {
@@ -556,51 +117,19 @@ Requires user JWT.
 }
 ```
 
-### Error Response
+Errors:
 
-**Status Code:** `400 Bad Request`
-
-```json
-{
-  "errors": [
-    {
-      "msg": "Origin is required",
-      "param": "origin",
-      "location": "query"
-    }
-  ]
-}
-```
-
-or
-
-```json
-{
-  "message": "Error fetching distance and time"
-}
-```
-
----
-
-## Get Place Suggestions
+- `400` validation errors
+- `400` `{ "error": "Origin and destination query parameters are required" }`
+- `400` `{ "message": "Error fetching distance and time" }`
 
 ### GET `/maps/get-suggestions`
 
-Returns Google Places autocomplete suggestions for input text.
+Query:
 
-### Authentication
+- `input` (required)
 
-Requires user JWT.
-
-### Query Parameters
-
-| Param | Required | Description |
-|-------|----------|-------------|
-| `input` | Yes | Partial place text |
-
-### Success Response
-
-**Status Code:** `200 OK`
+Success `200`:
 
 ```json
 [
@@ -611,45 +140,18 @@ Requires user JWT.
 ]
 ```
 
-### Error Response
+Errors:
 
-**Status Code:** `400 Bad Request`
+- `400` validation errors
+- `400` `{ "message": "Error fetching autocomplete suggestions" }`
 
-```json
-{
-  "errors": [
-    {
-      "msg": "Input is required",
-      "param": "input",
-      "location": "query"
-    }
-  ]
-}
-```
-
-or
-
-```json
-{
-  "message": "Error fetching autocomplete suggestions"
-}
-```
-
----
-
-## Ride Routes
-
-## Create Ride
+## Rides
 
 ### POST `/rides/create`
 
-Creates a new ride request for an authenticated user.
+Protected (`authUser`).
 
-### Authentication
-
-Requires user JWT.
-
-### Request Body
+Request body:
 
 ```json
 {
@@ -659,81 +161,149 @@ Requires user JWT.
 }
 ```
 
-### Field Requirements
+Validation:
 
-| Field | Type | Required | Validation Rules |
-|-------|------|----------|------------------|
-| `pickup` | String | Yes | Non-empty string |
-| `destination` | String | Yes | Non-empty string |
-| `vehicleType` | String | Yes | One of `bike`, `auto`, `car` |
+- `pickup`: non-empty string
+- `destination`: non-empty string
+- `vehicleType`: one of `bike | auto | car`
 
-### Success Response
+Success `201`: created ride object (OTP omitted in normal selection behavior).
 
-**Status Code:** `201 Created`
+Errors:
 
-```json
-{
-  "UserId": "user_id",
-  "pickup": "Rajiv Chowk, New Delhi",
-  "destination": "Noida Sector 18",
-  "status": "pending",
-  "fare": 230,
-  "_id": "ride_id",
-  "createdAt": "2026-02-25T10:00:00.000Z",
-  "updatedAt": "2026-02-25T10:00:00.000Z",
-  "__v": 0
-}
-```
+- `400` validation errors
+- `500` `{ "error": "..." }`
 
-> Note: `otp` is generated internally but excluded from default response (`select: false`).
+Socket side effect:
 
-### Error Response - Validation Failed
+- Emits `new-ride` to nearby captains.
 
-**Status Code:** `400 Bad Request`
+### GET `/rides/get-fare`
+
+Protected (`authUser`).
+
+Query:
+
+- `pickup` (required)
+- `destination` (required)
+
+Success `200`:
 
 ```json
 {
-  "errors": [
-    {
-      "msg": "Vehicle type must be one of bike, auto, or car",
-      "param": "vehicleType",
-      "location": "body"
-    }
-  ]
+  "fare": {
+    "bike": 120,
+    "auto": 160,
+    "car": 220
+  }
 }
 ```
 
-### Error Response - Server Error
+Errors:
 
-**Status Code:** `500 Internal Server Error`
+- `400` validation errors
+- `400` `{ "error": "Pickup and destination are required" }`
+- `500` `{ "error": "..." }`
+
+### POST `/rides/confirm`
+
+Protected (`authCaptain`).
+
+Request body:
 
 ```json
 {
-  "error": "Error message"
+  "rideId": "RIDE_OBJECT_ID"
 }
 ```
 
----
+Success `200`: updated ride (`status: accepted`, with populated user/captain).
 
-## Common Authentication Behavior
+Errors:
 
-For protected routes, middleware checks:
-1. token from cookie `token` or header `Authorization: Bearer <token>`
-2. token is not blacklisted
-3. token is valid JWT and maps to an existing user/captain
+- `400` validation errors
+- `500` `{ "error": "..." }`
 
-Typical unauthorized response:
+Socket side effect:
+
+- Emits `ride-confirmed` to user socket.
+
+### GET `/rides/start-ride`
+
+Protected (`authCaptain`).
+
+Query params:
+
+- `rideId` (required)
+- `otp` (required, 6 chars)
+
+Success `200`: ride object.
+
+Errors:
+
+- `400` validation errors
+- `500` `{ "error": "Invalid OTP" | "Ride not found" | ... }`
+
+Socket side effect:
+
+- Emits `ride-started` to user socket.
+
+### POST `/rides/end-ride`
+
+Protected (`authCaptain`).
+
+Request body:
 
 ```json
 {
-  "message": "Unauthorized!"
+  "rideId": "RIDE_OBJECT_ID"
 }
 ```
 
-In blacklisted-token cases, response message may be:
+Validation:
 
-```json
-{
-  "message": "Unauthorized"
-}
-```
+- `rideId`: required and Mongo ObjectId
+
+Success `200`: ride object.
+
+Errors:
+
+- `400` validation errors
+- `500` `{ "error": "Ride not found" | "Ride is not ongoing" | ... }`
+
+Socket side effect:
+
+- Emits `ride-ended` to user socket.
+
+## Realtime Socket Events
+
+Socket server starts in `server.js` via `initializeSocket(server)`.
+
+### Client -> Server
+
+- `join`
+  - payload: `{ userId, userType }`
+  - behavior: stores socketId on user/captain document
+
+- `update-location-captain`
+  - payload: `{ userId, location: { ltd, lng } }`
+  - behavior: updates captain location in DB
+
+### Server -> Client (used by ride flow)
+
+- `new-ride`
+- `ride-confirmed`
+- `ride-started`
+- `ride-ended`
+
+These are emitted via `sendMessageToSocketId(socketId, { event, data })`.
+
+## Notes
+
+- CORS is enabled with `app.use(cors())`.
+- JSON/body parsing and cookies are enabled.
+- Routes mounted in `app.js`:
+  - `/users`
+  - `/captains`
+  - `/maps`
+  - `/rides`
