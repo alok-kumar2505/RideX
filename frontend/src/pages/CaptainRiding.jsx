@@ -4,6 +4,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { useRef, useState } from "react";
 import FinishRide from "../components/FinishRide";
+import logo from "../assets/image.png";
 
 
 const CaptainRiding = () => {
@@ -30,7 +31,8 @@ const CaptainRiding = () => {
       <div className="fixed p-3 top-0 flex items-center justify-between w-screen ">
         <img
           className="w-18"
-          src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png"
+          src={logo}
+          alt="RideX Logo"
         />
         <Link
           to="/home"

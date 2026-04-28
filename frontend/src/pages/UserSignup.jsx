@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserDataContext } from "../context/UserContext";
+import logo from "../assets/image.png";
 
 const UserSignup = () => {
   const [firstName, setFirstName] = useState("");
@@ -44,7 +45,8 @@ const UserSignup = () => {
       <div>
         <img
           className="w-16 mb-10"
-          src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png"
+          src={logo}
+          alt="RideX Logo"
         />
         <form
           onSubmit={(e) => {

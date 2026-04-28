@@ -13,6 +13,7 @@ import { useContext } from "react";
 import {UserDataContext} from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import LiveTracking from "../components/LiveTracking";
+import logo from "../assets/image.png";
 
 const Home = () => {
   const [pickupLocation, setPickupLocation] = useState("");
@@ -279,7 +280,8 @@ const Home = () => {
     <div className="h-screen relative">
       <img
         className="w-18 absolute left-6 top-6"
-        src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png"
+        src={logo}
+        alt="RideX Logo"
       />
 
       <div className="h-screen w-screen">

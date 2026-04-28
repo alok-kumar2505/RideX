@@ -12,9 +12,6 @@ const rideRoutes=require('./routes/ride.routes');
 
 
 
-
-
-
 connectToDb()
 app.use(cors());
 app.use(express.json());
