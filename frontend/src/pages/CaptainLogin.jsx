@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react'
 import { Link , useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import { CaptainDataContext } from '../context/CaptainContext';
+import driverlogo from '../assets/driver.png'
 
 const CaptainLogin = () => {
   const [email,setEmail]=useState("");
@@ -30,8 +31,9 @@ const CaptainLogin = () => {
    <div className="p-5 flex flex-col h-screen justify-between">
       <div>
         <img
-          className="w-18 mb-4"
-          src="https://staging.svgrepo.com/show/505031/uber-driver.svg"
+          className="w-18 mb-4 mt-4"
+          src={driverlogo}
+          alt="Driver Logo"
         />
         <form onSubmit={(e)=>{
           formSubmit(e);

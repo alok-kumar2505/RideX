@@ -2,6 +2,7 @@ import React, { useState,useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {UserDataContext} from "../context/UserContext"
 import axios from 'axios';
+import logo from "../assets/image.png";
 
 const UserLogin = () => {
   const [email,setEmail]=useState("");
@@ -37,8 +38,9 @@ const UserLogin = () => {
     <div className="p-7 flex flex-col h-screen justify-between">
       <div>
         <img
-          className="w-16 mb-10"
-          src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png"
+          className="w-18 mb-10 scale-[1.2] object-contain"
+          src={logo}
+          alt="RideX Logo"
         />
         <form onSubmit={(e)=>{
           formSubmit(e);
