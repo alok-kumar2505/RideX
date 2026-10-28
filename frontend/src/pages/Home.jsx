@@ -23,6 +23,7 @@ const Home = () => {
   const [destinationSuggestions, setDestinationSuggestions] = useState([]);
   const [isPickupLoading, setIsPickupLoading] = useState(false);
   const [isDestinationLoading, setIsDestinationLoading] = useState(false);
+  const [mapError, setMapError] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const panelRef = useRef(null);
   const destinationInputRef = useRef(null);
@@ -95,7 +96,13 @@ const Home = () => {
         "Error fetching fare:",
         error?.response?.data || error.message
       );
-      toast.error("Unable to calculate fare for this route. Please check addresses.");
+      const exactError =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        (error?.response?.status === 500
+          ? "Internal server error: Map service failed to calculate route"
+          : "Unable to calculate fare for this route. Please check addresses.");
+      toast.error(exactError);
       return false;
     }
   };
@@ -145,12 +152,14 @@ const Home = () => {
 
     if (!currentQuery.trim()) {
       setSuggestions([]);
+      setMapError(null);
       return;
     }
 
     const timer = setTimeout(async () => {
       try {
         setLoading(true);
+        setMapError(null);
         const token = localStorage.getItem("token");
         const response = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/maps/get-suggestions`,
@@ -164,10 +173,18 @@ const Home = () => {
       } catch (error) {
         console.error("Error fetching suggestions:", error);
         setSuggestions([]);
+        const exactError =
+          error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          (error?.response?.status === 500
+            ? "Internal server error: Map service failed"
+            : error.message || "Failed to fetch location suggestions");
+        setMapError(exactError);
+        toast.error(`Map API Error: ${exactError}`);
       } finally {
         setLoading(false);
       }
-    }, 350);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [pickupLocation, destination, activeField]);
@@ -448,6 +465,8 @@ const Home = () => {
                     setVehiclePanel={setVehiclePanel}
                     suggestions={activeSuggestions}
                     isLoading={isActiveSuggestionsLoading}
+                    mapError={mapError}
+                    currentQuery={activeField === "pickup" ? pickupLocation : destination}
                     onSuggestionSelect={handleSuggestionSelect}
                   />
                 </div>
@@ -545,6 +564,8 @@ const Home = () => {
               setVehiclePanel={setVehiclePanel}
               suggestions={activeSuggestions}
               isLoading={isActiveSuggestionsLoading}
+              mapError={mapError}
+              currentQuery={activeField === "pickup" ? pickupLocation : destination}
               onSuggestionSelect={handleSuggestionSelect}
             />
           )}

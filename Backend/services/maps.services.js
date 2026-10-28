@@ -3,6 +3,9 @@ const captainModel = require("../models/captain.model");
 
 module.exports.getAddressCoordinate = async (address) => {
   const apiKey = process.env.GOOGLE_MAPS_API;
+  if (!apiKey) {
+    throw new Error("GOOGLE_MAPS_API key is not configured in server environment");
+  }
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
   try {
@@ -15,16 +18,22 @@ module.exports.getAddressCoordinate = async (address) => {
         lng: location.lng,
       };
     } else {
-      throw new Error(`Geocoding API error: ${response.data.status}`);
+      const detail = response.data.error_message
+        ? `${response.data.status}: ${response.data.error_message}`
+        : response.data.status;
+      throw new Error(`Geocoding API error: ${detail}`);
     }
   } catch (error) {
-    console.error("Error fetching coordinates:", error);
+    console.error("Error fetching coordinates:", error.message || error);
     throw error;
   }
 };
 
 module.exports.getDistanceAndTime = async (origin, destination) => {
   const apiKey = process.env.GOOGLE_MAPS_API;
+  if (!apiKey) {
+    throw new Error("GOOGLE_MAPS_API key is not configured in server environment");
+  }
   const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}&key=${apiKey}`;
 
   try {
@@ -44,13 +53,19 @@ module.exports.getDistanceAndTime = async (origin, destination) => {
           duration: element.duration.value, // duration in seconds
         };
       } else {
-        throw new Error(`Distance Matrix API error: ${element.status}`);
+        const elemDetail = element.error_message
+          ? `${element.status}: ${element.error_message}`
+          : element.status;
+        throw new Error(`Distance Matrix API error: ${elemDetail}`);
       }
     } else {
-      throw new Error(`Distance Matrix API error: ${response.data.status}`);
+      const detail = response.data.error_message
+        ? `${response.data.status}: ${response.data.error_message}`
+        : response.data.status;
+      throw new Error(`Distance Matrix API error: ${detail}`);
     }
   } catch (error) {
-    console.error("Error fetching distance and time:", error);
+    console.error("Error fetching distance and time:", error.message || error);
     throw error;
   }
 };
@@ -60,6 +75,9 @@ module.exports.getAutoCompleteSuggestions = async (input) => {
     throw new Error("query is required for autocomplete suggestions");
   }
   const apiKey = process.env.GOOGLE_MAPS_API;
+  if (!apiKey) {
+    throw new Error("GOOGLE_MAPS_API key is not configured in server environment");
+  }
   const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${apiKey}`;
 
   try {
@@ -70,7 +88,10 @@ module.exports.getAutoCompleteSuggestions = async (input) => {
     } else if (response.data.status === "ZERO_RESULTS") {
       return [];
     } else {
-      throw new Error(`Places API error: ${response.data.status}`);
+      const detail = response.data.error_message
+        ? `${response.data.status}: ${response.data.error_message}`
+        : response.data.status;
+      throw new Error(`Places API error: ${detail}`);
     }
   } catch (error) {
     console.error(
