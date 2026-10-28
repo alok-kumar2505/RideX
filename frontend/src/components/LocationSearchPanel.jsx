@@ -16,7 +16,7 @@ const LocationSearchPanel = (props) => {
           onClick={() => {
             props.onSuggestionSelect(el.description || "");
           }}
-          className="w-full text-left flex items-start gap-3 p-3 mb-2 mt-4 rounded-xl border border-gray-200 hover:border-gray-400 active:border-black transition "
+          className="w-full text-left flex items-start gap-3 p-3 mb-2 mt-4 rounded-xl border border-gray-200 hover:border-gray-400 active:border-black transition cursor-pointer"
         >
           <span className="bg-gray-100 h-9 w-9 rounded-full items-center flex justify-center shrink-0 mt-0.5">
             <i className="ri-map-pin-fill"></i>

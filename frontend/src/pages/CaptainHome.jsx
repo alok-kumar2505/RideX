@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
 import CaptainDetails from "../components/CaptainDetails";
 import RidePopUp from "../components/RidePopUp";
@@ -7,12 +7,10 @@ import gsap from "gsap";
 import "remixicon/fonts/remixicon.css";
 import ConfirmRidePopUp from "../components/ConfirmRidePopUp";
 import { CaptainDataContext } from "../context/CaptainContext";
-import { useContext } from "react";
 import { SocketContext } from "../context/SocketContext";
-import { useEffect } from "react";
 import axios from "axios";
 import LiveTracking from "../components/LiveTracking";
-import logo from "../assets/image.png";
+import driverlogo from "../assets/driver.png";
 
 const CaptainHome = () => {
   const [ridePopupPanel, setRidePopupPanel] = useState(false);
@@ -21,16 +19,14 @@ const CaptainHome = () => {
   const confirmRidePopupPanelRef = useRef(null);
   const { captain } = useContext(CaptainDataContext);
   const { socket } = useContext(SocketContext);
-  const [ride,SetRide]=useState(null)
-  
+  const [ride, setRide] = useState(null);
 
   useEffect(() => {
     if (!captain?._id || !socket) {
-      console.log('⏳ Waiting for captain or socket...', {captain: !!captain, socket: !!socket});
       return;
     }
-        socket.emit("join", { userId: captain._id, userType: "captain" });
-    
+    socket.emit("join", { userId: captain._id, userType: "captain" });
+
     const updateLocation = () => {
       navigator.geolocation.getCurrentPosition((position) => {
         socket.emit("update-location-captain", {
@@ -43,94 +39,168 @@ const CaptainHome = () => {
       });
     };
     const locationInterval = setInterval(updateLocation, 10000);
-    updateLocation(); // Initial location update on component mount
+    updateLocation();
 
     return () => clearInterval(locationInterval);
-  }, []);
+  }, [captain, socket]);
 
+  useEffect(() => {
+    if (!socket) return;
 
-    socket.on("new-ride", (data) => {
-      console.log("📩 New ride received:", data.user);
-      SetRide(data);
+    const handleNewRide = (data) => {
+      setRide(data);
       setRidePopupPanel(true);
-    });
+    };
 
-    async function confirmRide() {
-      try {
-        const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/rides/confirm`, {
+    socket.on("new-ride", handleNewRide);
+
+    return () => {
+      socket.off("new-ride", handleNewRide);
+    };
+  }, [socket]);
+
+  async function confirmRide() {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/rides/confirm`,
+        {
           rideId: ride._id,
-          captainId: captain._id
-        },{headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }});
-        console.log("✅ Ride confirmed:", response.data);
-      } catch (error) {
-        console.error("Error confirming ride:", error);
-      }
+          captainId: captain._id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      console.log("✅ Ride confirmed:", response.data);
+    } catch (error) {
+      console.error("Error confirming ride:", error);
     }
+  }
 
   useGSAP(() => {
-    if (ridePopupPanel) {
-      gsap.to(ridePopupPanelRef.current, {
-        transform: "translateY(0)",
-      });
-    } else {
-      gsap.to(ridePopupPanelRef.current, {
-        transform: "translateY(100%)",
-      });
+    if (ridePopupPanelRef.current) {
+      if (ridePopupPanel) {
+        gsap.to(ridePopupPanelRef.current, {
+          transform: "translateY(0)",
+        });
+      } else {
+        gsap.to(ridePopupPanelRef.current, {
+          transform: "translateY(100%)",
+        });
+      }
     }
   }, [ridePopupPanel]);
 
   useGSAP(() => {
-    if (confirmRidePopupPanel) {
-      gsap.to(confirmRidePopupPanelRef.current, {
-        transform: "translateY(0)",
-      });
-    } else {
-      gsap.to(confirmRidePopupPanelRef.current, {
-        transform: "translateY(100%)",
-      });
+    if (confirmRidePopupPanelRef.current) {
+      if (confirmRidePopupPanel) {
+        gsap.to(confirmRidePopupPanelRef.current, {
+          transform: "translateY(0)",
+        });
+      } else {
+        gsap.to(confirmRidePopupPanelRef.current, {
+          transform: "translateY(100%)",
+        });
+      }
     }
   }, [confirmRidePopupPanel]);
 
   return (
-    <div className="h-screen">
-      <div className="fixed p-3 top-0 flex items-center justify-between w-screen ">
-        <img
-          className="w-18"
-          src={logo}
-        />
-        <Link
-          to="/home"
-          className="h-10 w-10 bg-white flex items-center justify-center rounded-full "
-        >
-          <i className="text-lg font-bold ri-logout-box-r-line"></i>
-        </Link>
+    <div className="h-screen w-full flex flex-col md:flex-row relative overflow-hidden bg-white">
+      {/* =========================================================================
+          DESKTOP / LAPTOP SIDEBAR (md:flex)
+          ========================================================================= */}
+      <div className="hidden md:flex md:w-[440px] lg:w-[480px] h-screen bg-white border-r border-gray-200 shadow-2xl flex-col z-20 shrink-0">
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+          <img
+            className="w-16 object-contain"
+            src={driverlogo}
+            alt="Driver Logo"
+          />
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold capitalize text-gray-800">
+              {captain?.fullname?.firstname || "Captain"}
+            </span>
+            <Link
+              to="/home"
+              className="h-8 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center rounded-lg text-xs font-semibold transition cursor-pointer"
+              title="Logout"
+            >
+              <i className="ri-logout-box-r-line mr-1"></i>
+              Logout
+            </Link>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+          {confirmRidePopupPanel ? (
+            <ConfirmRidePopUp
+              ride={ride}
+              setConfirmRidePopupPanel={setConfirmRidePopupPanel}
+              setRidePopupPanel={setRidePopupPanel}
+            />
+          ) : ridePopupPanel ? (
+            <RidePopUp
+              ride={ride}
+              setRidePopupPanel={setRidePopupPanel}
+              setConfirmRidePopupPanel={setConfirmRidePopupPanel}
+              confirmRide={confirmRide}
+            />
+          ) : (
+            <div className="space-y-6">
+              <CaptainDetails />
+            </div>
+          )}
+        </div>
       </div>
-      <div className="h-3/5">
-        <LiveTracking/>
+
+      {/* =========================================================================
+          MAP AREA (Full width on mobile, right side on desktop)
+          ========================================================================= */}
+      <div className="flex-1 h-3/5 md:h-full relative z-0">
+        <div className="md:hidden fixed p-3 top-0 flex items-center justify-between w-full z-10 pointer-events-none">
+          <img
+            className="w-16 pointer-events-auto"
+            src={driverlogo}
+            alt="Driver Logo"
+          />
+          <Link
+            to="/home"
+            className="h-10 w-10 bg-white flex items-center justify-center rounded-full shadow-md pointer-events-auto"
+          >
+            <i className="text-lg font-bold ri-logout-box-r-line"></i>
+          </Link>
+        </div>
+
+        <LiveTracking />
       </div>
-      <div className="h-2/5 p-6 ">
+
+      {/* =========================================================================
+          MOBILE-ONLY DETAILS & SLIDING POPUPS (< md)
+          ========================================================================= */}
+      <div className="md:hidden h-2/5 p-6 bg-white overflow-y-auto border-t border-gray-100">
         <CaptainDetails />
       </div>
 
+      {/* Mobile Sliding Ride Popup */}
       <div
         ref={ridePopupPanelRef}
-        className=" fixed w-full
-         z-20 bottom-0 px-3 py-10  translate-y-full bg-white pt-12"
+        className="md:hidden fixed w-full z-20 bottom-0 px-3 py-10 translate-y-full bg-white pt-12"
       >
         <RidePopUp
           ride={ride}
           setRidePopupPanel={setRidePopupPanel}
           setConfirmRidePopupPanel={setConfirmRidePopupPanel}
           confirmRide={confirmRide}
-
         />
       </div>
+
+      {/* Mobile Sliding Confirm Ride Popup */}
       <div
         ref={confirmRidePopupPanelRef}
-        className=" fixed w-full h-screen
-         z-20 bottom-0 px-3 py-10  translate-y-full bg-white pt-12"
+        className="md:hidden fixed w-full h-screen z-20 bottom-0 px-3 py-10 translate-y-full bg-white pt-12"
       >
         <ConfirmRidePopUp
           ride={ride}
