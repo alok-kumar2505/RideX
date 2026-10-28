@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "../context/ToastContext";
 
 const ConfirmRidePopUp = (props) => {
   const [otp, setOtp] = useState("");
@@ -23,12 +24,16 @@ const ConfirmRidePopUp = (props) => {
         }
       );
       if (response.status === 200) {
+        toast.success("OTP verified! Ride started.");
         props.setConfirmRidePopupPanel(false);
         props.setRidePopupPanel(false);
         navigate("/captain-riding", { state: { ride: props.ride } });
       }
     } catch (err) {
       console.error("Error starting ride:", err);
+      toast.error(
+        err?.response?.data?.message || "Invalid OTP. Please check with rider."
+      );
     }
   };
 

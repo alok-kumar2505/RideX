@@ -10,6 +10,7 @@ import WaitingForDriver from "../components/WaitingForDriver";
 import axios from "axios";
 import { SocketContext } from "../context/SocketContext";
 import { UserDataContext } from "../context/UserContext";
+import { toast } from "../context/ToastContext";
 import { useNavigate, Link } from "react-router-dom";
 import LiveTracking from "../components/LiveTracking";
 import logo from "../assets/image.png";
@@ -54,6 +55,7 @@ const Home = () => {
     if (!socket) return;
 
     socket.on("ride-confirmed", (ride) => {
+      toast.success("A captain accepted your ride request!");
       setVehicleFound(false);
       setConfirmRidePanel(false);
       setWaitingForDriver(true);
@@ -61,6 +63,7 @@ const Home = () => {
     });
 
     socket.on("ride-started", (ride) => {
+      toast.info("Ride started! Have a safe trip.");
       setWaitingForDriver(false);
       navigate("/riding", { state: { ride } });
     });
@@ -92,6 +95,7 @@ const Home = () => {
         "Error fetching fare:",
         error?.response?.data || error.message
       );
+      toast.error("Unable to calculate fare for this route. Please check addresses.");
       return false;
     }
   };
@@ -102,12 +106,14 @@ const Home = () => {
     }
 
     if (!pickupLocation.trim()) {
+      toast.error("Please enter a pick-up location");
       setActiveField("pickup");
       setPanelOpen(true);
       return;
     }
 
     if (!destination.trim()) {
+      toast.error("Please enter a destination");
       setActiveField("destination");
       setPanelOpen(true);
       setTimeout(() => {
@@ -293,11 +299,15 @@ const Home = () => {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
       );
+      toast.success("Ride requested! Searching for nearby captains...");
       return response.data;
     } catch (error) {
       console.error(
         "Error creating ride:",
         error?.response?.data || error.message
+      );
+      toast.error(
+        error?.response?.data?.message || "Failed to create ride. Please try again."
       );
       throw error;
     }

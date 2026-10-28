@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CaptainDataContext } from "../context/CaptainContext";
+import { toast } from "../context/ToastContext";
 import axios from "axios";
 
 const CaptainSignup = () => {
@@ -41,6 +42,7 @@ const CaptainSignup = () => {
         const data = response.data;
         setCaptain(data.captain);
         localStorage.setItem("token", data.token);
+        toast.success("Captain registration successful! Welcome to the fleet.");
         navigate("/captain-home");
       }
       setFirstName("");
@@ -53,16 +55,15 @@ const CaptainSignup = () => {
       setVehicleType("");
     } catch (error) {
       console.error("Full Error:", error);
+      let errorMsg = "Registration failed. Please check your information.";
       if (error.response?.data?.errors) {
-        const errorMessages = error.response.data.errors
+        errorMsg = error.response.data.errors
           .map((err) => err.msg)
-          .join("\n");
-        console.error("Validation Errors:", errorMessages);
+          .join(". ");
       } else if (error.response?.data?.message) {
-        console.error("Error:", error.response.data.message);
-      } else {
-        console.error("Error:", error.message);
+        errorMsg = error.response.data.message;
       }
+      toast.error(errorMsg);
     }
   };
 

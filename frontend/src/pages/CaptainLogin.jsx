@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { CaptainDataContext } from "../context/CaptainContext";
+import { toast } from "../context/ToastContext";
 import driverlogo from "../assets/driver.png";
 
 const CaptainLogin = () => {
@@ -16,15 +17,25 @@ const CaptainLogin = () => {
       email: email,
       password: password,
     };
-    const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/captains/login`,
-      captain
-    );
-    if (response.status === 200) {
-      const data = response.data;
-      setCaptain(data.captain);
-      localStorage.setItem("token", data.token);
-      navigate("/captain-home");
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/captains/login`,
+        captain
+      );
+      if (response.status === 200) {
+        const data = response.data;
+        setCaptain(data.captain);
+        localStorage.setItem("token", data.token);
+        toast.success("Captain login successful!");
+        navigate("/captain-home");
+      }
+    } catch (err) {
+      console.error("Captain Login Error:", err);
+      const errorMsg =
+        err.response?.data?.message ||
+        "Invalid captain credentials. Please try again.";
+      toast.error(errorMsg);
     }
 
     setEmail("");

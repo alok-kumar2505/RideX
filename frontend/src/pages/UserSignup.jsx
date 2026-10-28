@@ -2,6 +2,7 @@ import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserDataContext } from "../context/UserContext";
+import { toast } from "../context/ToastContext";
 import logo from "../assets/image.png";
 
 const UserSignup = () => {
@@ -24,17 +25,28 @@ const UserSignup = () => {
       email: email,
       password: password,
     };
-    const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/users/register`,
-      newUser
-    );
-    if (response.status === 201) {
-      const data = response.data;
-      setUser(data.user);
-      localStorage.setItem("token", data.token);
 
-      Navigate("/home");
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/users/register`,
+        newUser
+      );
+      if (response.status === 201) {
+        const data = response.data;
+        setUser(data.user);
+        localStorage.setItem("token", data.token);
+        toast.success("Account created successfully! Welcome to RideX.");
+        Navigate("/home");
+      }
+    } catch (err) {
+      console.error("Signup Error:", err);
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.msg ||
+        "Registration failed. Please check your information.";
+      toast.error(errorMsg);
     }
+
     setFirstName("");
     setLastName("");
     setEmail("");

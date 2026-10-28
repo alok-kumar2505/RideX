@@ -1,5 +1,5 @@
 import React, { useRef, useState, useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CaptainDetails from "../components/CaptainDetails";
 import RidePopUp from "../components/RidePopUp";
 import { useGSAP } from "@gsap/react";
@@ -8,6 +8,7 @@ import "remixicon/fonts/remixicon.css";
 import ConfirmRidePopUp from "../components/ConfirmRidePopUp";
 import { CaptainDataContext } from "../context/CaptainContext";
 import { SocketContext } from "../context/SocketContext";
+import { toast } from "../context/ToastContext";
 import axios from "axios";
 import LiveTracking from "../components/LiveTracking";
 import driverlogo from "../assets/driver.png";
@@ -20,6 +21,13 @@ const CaptainHome = () => {
   const { captain } = useContext(CaptainDataContext);
   const { socket } = useContext(SocketContext);
   const [ride, setRide] = useState(null);
+  const navigate = useNavigate();
+
+  const handleCaptainLogout = () => {
+    localStorage.removeItem("token");
+    toast.success("Logged out successfully");
+    navigate("/captain-login");
+  };
 
   useEffect(() => {
     if (!captain?._id || !socket) {
@@ -50,6 +58,7 @@ const CaptainHome = () => {
     const handleNewRide = (data) => {
       setRide(data);
       setRidePopupPanel(true);
+      toast.info("New ride request received!");
     };
 
     socket.on("new-ride", handleNewRide);
@@ -73,9 +82,12 @@ const CaptainHome = () => {
           },
         }
       );
-      console.log("✅ Ride confirmed:", response.data);
+      toast.success("Ride accepted!");
     } catch (error) {
       console.error("Error confirming ride:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to accept ride. Please try again."
+      );
     }
   }
 
@@ -123,14 +135,14 @@ const CaptainHome = () => {
             <span className="text-sm font-semibold capitalize text-gray-800">
               {captain?.fullname?.firstname || "Captain"}
             </span>
-            <Link
-              to="/home"
+            <button
+              onClick={handleCaptainLogout}
               className="h-8 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center rounded-lg text-xs font-semibold transition cursor-pointer"
               title="Logout"
             >
               <i className="ri-logout-box-r-line mr-1"></i>
               Logout
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -166,12 +178,13 @@ const CaptainHome = () => {
             src={driverlogo}
             alt="Driver Logo"
           />
-          <Link
-            to="/home"
-            className="h-10 w-10 bg-white flex items-center justify-center rounded-full shadow-md pointer-events-auto"
+          <button
+            onClick={handleCaptainLogout}
+            className="h-10 w-10 bg-white flex items-center justify-center rounded-full shadow-md pointer-events-auto cursor-pointer"
+            title="Logout"
           >
             <i className="text-lg font-bold ri-logout-box-r-line"></i>
-          </Link>
+          </button>
         </div>
 
         <LiveTracking />

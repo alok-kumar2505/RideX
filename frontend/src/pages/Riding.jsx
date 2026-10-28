@@ -1,6 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SocketContext } from "../context/SocketContext";
+import { toast } from "../context/ToastContext";
 import LiveTracking from "../components/LiveTracking";
 import logo from "../assets/image.png";
 
@@ -13,12 +14,21 @@ const Riding = () => {
   useEffect(() => {
     if (!socket) return;
     socket.on("ride-ended", () => {
+      toast.success("Ride ended! Hope you had a pleasant trip.");
       navigate("/home");
     });
     return () => {
       socket.off("ride-ended");
     };
   }, [socket, navigate]);
+
+  const handlePayment = () => {
+    toast.info(
+      ride?.fare
+        ? `Please pay ₹${ride.fare} in cash to your captain.`
+        : "Please pay the ride fare in cash to your captain."
+    );
+  };
 
   return (
     <div className="h-screen w-full flex flex-col md:flex-row relative overflow-hidden bg-white">
@@ -82,7 +92,10 @@ const Riding = () => {
           </div>
         </div>
 
-        <button className="w-full bg-green-600 hover:bg-green-700 rounded-lg text-white p-3 font-semibold text-lg cursor-pointer transition shadow-md">
+        <button
+          onClick={handlePayment}
+          className="w-full bg-green-600 hover:bg-green-700 rounded-lg text-white p-3 font-semibold text-lg cursor-pointer transition shadow-md"
+        >
           Make a payment
         </button>
       </div>
@@ -134,7 +147,10 @@ const Riding = () => {
           </div>
         </div>
 
-        <button className="w-full bg-green-600 rounded-lg text-white p-2 font-semibold mt-2 cursor-pointer">
+        <button
+          onClick={handlePayment}
+          className="w-full bg-green-600 rounded-lg text-white p-2 font-semibold mt-2 cursor-pointer"
+        >
           Make a payment
         </button>
       </div>

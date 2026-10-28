@@ -1,6 +1,7 @@
 import axios from "axios";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "../context/ToastContext";
 
 const FinishRide = (props) => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const FinishRide = (props) => {
       );
 
       if (response.status === 200) {
+        toast.success("Ride completed successfully!");
         navigate("/captain-home");
         if (props.setFinishRidePanel) {
           props.setFinishRidePanel(false);
@@ -27,6 +29,9 @@ const FinishRide = (props) => {
       }
     } catch (error) {
       console.error("Error ending ride:", error);
+      toast.error(
+        error?.response?.data?.message || "Failed to complete ride."
+      );
     }
   }
 
