@@ -38,19 +38,18 @@ const LiveTracking = () => {
         const updatePosition = () => {
             navigator.geolocation.getCurrentPosition((position) => {
                 const { latitude, longitude } = position.coords;
-
-                console.log('Position updated:', latitude, longitude);
                 setCurrentPosition({
                     lat: latitude,
                     lng: longitude
                 });
-            });
+            }, () => {}, { enableHighAccuracy: true });
         };
 
         updatePosition(); // Initial position update
 
-        const intervalId = setInterval(updatePosition, 1000); // Update every 10 seconds
+        const intervalId = setInterval(updatePosition, 30000); // Update every 30 seconds
 
+        return () => clearInterval(intervalId);
     }, []);
 
     return (

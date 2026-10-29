@@ -63,7 +63,6 @@ const CaptainHome = () => {
     }
 
     const emitJoin = () => {
-      console.log("🔌 Emitting join for captain:", captain._id);
       socket.emit("join", { userId: captain._id, userType: "captain" });
     };
 
@@ -84,14 +83,12 @@ const CaptainHome = () => {
             },
           });
         },
-        (err) => {
-          console.warn("Geolocation warning in CaptainHome:", err.message);
-        },
+        () => {},
         { enableHighAccuracy: true, timeout: 5000 }
       );
     };
 
-    const locationInterval = setInterval(updateLocation, 10000);
+    const locationInterval = setInterval(updateLocation, 30000);
     updateLocation();
 
     return () => {
@@ -110,7 +107,6 @@ const CaptainHome = () => {
     };
 
     const handleRideCancelled = (data) => {
-      console.log("🚫 Received ride-cancelled event:", data);
       setRide((currentRide) => {
         if (!currentRide) return null;
         const cancelledId = data?.rideId || data?.ride?._id;
@@ -125,7 +121,6 @@ const CaptainHome = () => {
     };
 
     const handleRideTaken = (data) => {
-      console.log("🚕 Received ride-taken event:", data);
       const myCaptainId = captainRef.current?._id?.toString();
       // If this captain accepted the ride, ignore the broadcast so we don't clear our own ride state
       if (
@@ -133,7 +128,6 @@ const CaptainHome = () => {
         myCaptainId &&
         data.acceptedByCaptainId.toString() === myCaptainId
       ) {
-        console.log("🚕 Ignoring ride-taken because this captain accepted it");
         return;
       }
 

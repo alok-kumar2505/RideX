@@ -31,8 +31,6 @@ module.exports.createRide = async (req, res) => {
     const rideWithUser = await rideModel.findOne({_id: ride._id}).populate('user');
     res.status(201).json(ride);
 
-    console.log(`📡 Dispatching new-ride to ${captainInRadius.length} captains`);
-
     captainInRadius.forEach((captain) => {
       sendMessageToSocketId(
         captain.socketId,
@@ -72,7 +70,6 @@ module.exports.confirmRide = async (req, res) => {
   try {
     const { rideId } = req.body;
     const ride = await rideService.confirmRide(rideId, req.captain);
-    console.log("Ride confirmed:", ride._id, "by captain:", req.captain._id);
 
     // Notify the user that ride is confirmed
     sendMessageToSocketId(
@@ -112,7 +109,6 @@ module.exports.cancelRide = async (req, res) => {
   try {
     const { rideId } = req.body;
     const ride = await rideService.cancelRide(rideId, req.user);
-    console.log(`🚫 Ride ${rideId} cancelled by rider. Broadcasting to captains.`);
 
     // Broadcast to all captains so open popups close immediately
     sendMessageToSocketId(

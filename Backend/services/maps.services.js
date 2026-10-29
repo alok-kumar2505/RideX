@@ -270,7 +270,6 @@ module.exports.getCaptainsInTheRadius = async (ltd, lng, radius = 10) => {
   });
 
   if (!activeCaptains || activeCaptains.length === 0) {
-    console.log("⚠️ No active captains currently found in database");
     return [];
   }
 
@@ -281,7 +280,6 @@ module.exports.getCaptainsInTheRadius = async (ltd, lng, radius = 10) => {
     isNaN(ltd) ||
     isNaN(lng)
   ) {
-    console.log("ℹ️ Pickup coordinates not provided; notifying all active captains");
     return activeCaptains;
   }
 
@@ -310,10 +308,8 @@ module.exports.getCaptainsInTheRadius = async (ltd, lng, radius = 10) => {
   // If none are within strict radius (e.g. testing in development or low-density areas),
   // fallback to all active captains so the ride request is never lost
   if (nearbyCaptains.length === 0) {
-    console.log(`ℹ️ No captains within ${radius}km. Broadcasting to all ${activeCaptains.length} active captains`);
     return activeCaptains;
   }
 
-  console.log(`✅ Found ${nearbyCaptains.length} captains within ${radius}km`);
   return nearbyCaptains;
 };

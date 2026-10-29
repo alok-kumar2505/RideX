@@ -13,8 +13,6 @@ function initializeSocket(server) {
   });
 
   io.on("connection", (socket) => {
-    console.log(`Socket connected: ${socket.id}`);
-
     socket.on("join", async (data) => {
       const { userId, userType } = data;
       if (!userId) return;
@@ -29,7 +27,6 @@ function initializeSocket(server) {
           { socketId: socket.id },
           { new: true }
         );
-        console.log(`👤 User ${userId} joined room [${userRoom}] with socket: ${socket.id}`);
       } else if (userType === "captain") {
         socket.join("all_captains");
         await captainModel.findByIdAndUpdate(
@@ -37,7 +34,6 @@ function initializeSocket(server) {
           { socketId: socket.id, lastActive: new Date() },
           { new: true }
         );
-        console.log(`🚗 Captain ${userId} joined room [${userRoom}] with socket: ${socket.id}`);
       }
     });
 
@@ -52,7 +48,7 @@ function initializeSocket(server) {
       const now = new Date();
       if (existingCaptain && existingCaptain.lastActive) {
         const diffMs = now - new Date(existingCaptain.lastActive);
-        if (diffMs > 0 && diffMs < 60000) {
+        if (diffMs > 0 && diffMs < 180000) {
           hoursToAdd = diffMs / (1000 * 60 * 60);
         }
       }
@@ -67,9 +63,7 @@ function initializeSocket(server) {
       });
     });
 
-    socket.on("disconnect", () => {
-      console.log(`Socket disconnected: ${socket.id}`);
-    });
+    socket.on("disconnect", () => {});
   });
 }
 
@@ -78,17 +72,7 @@ function initializeSocket(server) {
  * This guarantees delivery even if the user or captain recently refreshed the page.
  */
 const sendMessageToSocketId = (socketId, messageObject, userId = null) => {
-  console.log(
-    "🔔 Attempting to send event:",
-    messageObject.event,
-    "| socketId:",
-    socketId,
-    "| userId room:",
-    userId
-  );
-
   if (!io) {
-    console.log("Socket.io server instance (io) is not initialized");
     return;
   }
 
@@ -105,10 +89,6 @@ const sendMessageToSocketId = (socketId, messageObject, userId = null) => {
     const userRoom = userId.toString();
     io.to(userRoom).emit(messageObject.event, messageObject.data);
     sent = true;
-  }
-
-  if (!sent) {
-    console.log("Cannot send message - neither socketId nor userId provided");
   }
 };
 

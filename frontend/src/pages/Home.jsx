@@ -50,7 +50,6 @@ const Home = () => {
     if (!user?._id || !socket) return;
 
     const emitJoin = () => {
-      console.log("🔌 Emitting join for rider:", user._id);
       socket.emit("join", { userId: user._id, userType: "user" });
     };
 
@@ -357,7 +356,7 @@ const Home = () => {
         toast.info("Ride request cancelled");
       }
     } catch (error) {
-      console.warn("Cancel ride error:", error?.response?.data?.message || error.message);
+      // Ignore cancellation warning
     } finally {
       setRide(null);
       setVehicleFound(false);
