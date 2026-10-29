@@ -62,29 +62,79 @@ module.exports.createRide = async (user, pickup, destination, vehicleType) => {
   return ride;
 };
 
-module.exports.confirmRide = async(rideId, captain) => {
-  if(!rideId || !captain){
+module.exports.confirmRide = async (rideId, captain) => {
+  if (!rideId || !captain) {
     throw new Error("Ride ID and Captain are required to confirm a ride");
   }
 
+  // 1. Check current ride status
+  const existingRide = await rideModel.findById(rideId);
+  if (!existingRide) {
+    throw new Error("Ride not found or no longer available");
+  }
+
+  if (existingRide.status === "cancelled") {
+    throw new Error("This ride was cancelled by the user");
+  }
+
+  if (
+    existingRide.status === "accepted" ||
+    existingRide.status === "ongoing" ||
+    existingRide.status === "completed"
+  ) {
+    if (
+      existingRide.captain &&
+      existingRide.captain.toString() !== captain._id.toString()
+    ) {
+      throw new Error("This ride has already been accepted by another captain");
+    }
+  }
+
+  // 2. Atomically update only if status is still pending
   const ride = await rideModel
     .findOneAndUpdate(
-      { _id: rideId },
+      { _id: rideId, status: "pending" },
       { captain: captain._id, status: "accepted" },
-      { new: true },
+      { new: true }
     )
-    .populate("user").populate("captain").select("+otp");
+    .populate("user")
+    .populate("captain")
+    .select("+otp");
 
-  if(!ride){
-    throw new Error("Ride not found");
+  if (!ride) {
+    const updated = await rideModel.findById(rideId);
+    if (updated?.status === "cancelled") {
+      throw new Error("This ride was cancelled by the user");
+    }
+    throw new Error("This ride has already been accepted by another captain");
   }
 
   return ride;
-}
+};
+
+module.exports.cancelRide = async (rideId, user) => {
+  if (!rideId) {
+    throw new Error("Ride ID is required to cancel a ride");
+  }
+
+  const ride = await rideModel.findOne({ _id: rideId, user: user._id });
+  if (!ride) {
+    throw new Error("Ride not found");
+  }
+
+  if (ride.status === "completed") {
+    throw new Error("Cannot cancel a completed ride");
+  }
+
+  ride.status = "cancelled";
+  await ride.save();
+
+  return ride;
+};
 
 module.exports.startRide = async({rideId, otp, captain}) => {
   if(!rideId || !otp ){
-    throw new Error("Ride ID, OTP  are required to start a ride");
+    throw new Error("Ride ID and OTP are required to start a ride");
   }
   const ride = await rideModel
     .findOne({_id: rideId})
@@ -95,55 +145,50 @@ module.exports.startRide = async({rideId, otp, captain}) => {
   if(!ride){
     throw new Error("Ride not found");  
   }
-  if(ride.otp !== otp){
+  if(String(ride.otp).trim() !== String(otp).trim()){
     throw new Error("Invalid OTP");
   }
 
-  await rideModel.findOneAndUpdate({_id: rideId}, {status: "ongoing"});
+  const updatedRide = await rideModel
+    .findOneAndUpdate({_id: rideId}, {status: "ongoing"}, {new: true})
+    .populate("user")
+    .populate("captain");
 
-  sendMessageToSocketId(ride.user.socketId, {
-    event: "ride-started",
-    data: ride,
-   });
+  return updatedRide;
+};
 
-  return ride;
+module.exports.endRide = async({rideId, captain}) => {
+  if(!rideId){
+    throw new Error("Ride ID is required to end a ride");
+  }
+  const ride = await rideModel
+    .findOne({_id: rideId, captain: captain._id})
+    .populate("user")
+    .populate("captain");
+
+  if(!ride){
+    throw new Error("Ride not found");  
   }
 
-
-  module.exports.endRide = async({rideId, captain}) => {
-    if(!rideId){
-      throw new Error("Ride ID is required to end a ride");
-    }
-    const ride = await rideModel
-      .findOne({_id: rideId, captain: captain._id})
-      .populate("user")
-      .populate("captain");
-
-    if(!ride){
-      throw new Error("Ride not found");  
-    }
-
-    if(ride.status !== "ongoing"){
-      throw new Error("Ride is not ongoing");
-    }
-
-    await rideModel.findOneAndUpdate({_id: rideId}, {status: "completed"});
-
-    const rideDistanceKm = ride.distance ? Math.round((ride.distance / 1000) * 10) / 10 : 0;
-    const rideFare = ride.fare || 0;
-
-    await captainModel.findByIdAndUpdate(captain._id, {
-      $inc: {
-        earnings: rideFare,
-        totalRides: 1,
-        totalDistance: rideDistanceKm,
-      }
-    });
-
-    sendMessageToSocketId(ride.user.socketId, {
-      event: "ride-ended",
-      data: ride,
-     });
-
-    return ride;
+  if(ride.status !== "ongoing"){
+    throw new Error("Ride is not ongoing");
   }
+
+  const updatedRide = await rideModel
+    .findOneAndUpdate({_id: rideId}, {status: "completed"}, {new: true})
+    .populate("user")
+    .populate("captain");
+
+  const rideDistanceKm = ride.distance ? Math.round((ride.distance / 1000) * 10) / 10 : 0;
+  const rideFare = ride.fare || 0;
+
+  await captainModel.findByIdAndUpdate(captain._id, {
+    $inc: {
+      earnings: rideFare,
+      totalRides: 1,
+      totalDistance: rideDistanceKm,
+    }
+  });
+
+  return updatedRide;
+};

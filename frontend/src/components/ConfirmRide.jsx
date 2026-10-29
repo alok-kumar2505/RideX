@@ -8,12 +8,26 @@ const ConfirmRide = (props) => {
           props.setConfirmRidePanel(false);
           props.setVehiclePanel(true);
         }}
-        className="p-1 text-center w-[93%] absolute top-0 cursor-pointer"
+        className="p-1 text-center w-[93%] absolute top-0 cursor-pointer md:hidden"
       >
         <i className="text-3xl text-gray-400 ri-arrow-down-wide-fill"></i>
       </h5>
 
-      <h3 className="text-xl font-semibold">Confirm your ride</h3>
+      {/* Large Screen Back Arrow */}
+      <div className="flex items-center gap-3 mb-3">
+        <button
+          type="button"
+          onClick={() => {
+            props.setConfirmRidePanel(false);
+            props.setVehiclePanel(true);
+          }}
+          className="hidden md:flex w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 items-center justify-center transition cursor-pointer"
+          title="Back"
+        >
+          <i className="ri-arrow-left-line text-lg font-semibold"></i>
+        </button>
+        <h3 className="text-xl font-semibold">Confirm your ride</h3>
+      </div>
       <div className="flex flex-col items-center p-2">
         <img
           className="h-22"

@@ -21,7 +21,13 @@ const CaptainHome = () => {
   const { captain, setCaptain } = useContext(CaptainDataContext);
   const { socket } = useContext(SocketContext);
   const [ride, setRide] = useState(null);
+  const [isAccepting, setIsAccepting] = useState(false);
   const navigate = useNavigate();
+
+  const captainRef = useRef(captain);
+  useEffect(() => {
+    captainRef.current = captain;
+  }, [captain]);
 
   useEffect(() => {
     const fetchCaptainProfile = async () => {
@@ -55,24 +61,44 @@ const CaptainHome = () => {
     if (!captain?._id || !socket) {
       return;
     }
-    socket.emit("join", { userId: captain._id, userType: "captain" });
+
+    const emitJoin = () => {
+      console.log("🔌 Emitting join for captain:", captain._id);
+      socket.emit("join", { userId: captain._id, userType: "captain" });
+    };
+
+    if (socket.connected) {
+      emitJoin();
+    }
+    socket.on("connect", emitJoin);
 
     const updateLocation = () => {
-      navigator.geolocation.getCurrentPosition((position) => {
-        socket.emit("update-location-captain", {
-          userId: captain._id,
-          location: {
-            ltd: position.coords.latitude,
-            lng: position.coords.longitude,
-          },
-        });
-      });
+      if (!navigator.geolocation) return;
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          socket.emit("update-location-captain", {
+            userId: captain._id,
+            location: {
+              ltd: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+          });
+        },
+        (err) => {
+          console.warn("Geolocation warning in CaptainHome:", err.message);
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
     };
+
     const locationInterval = setInterval(updateLocation, 10000);
     updateLocation();
 
-    return () => clearInterval(locationInterval);
-  }, [captain, socket]);
+    return () => {
+      socket.off("connect", emitJoin);
+      clearInterval(locationInterval);
+    };
+  }, [captain?._id, socket]);
 
   useEffect(() => {
     if (!socket) return;
@@ -83,20 +109,70 @@ const CaptainHome = () => {
       toast.info("New ride request received!");
     };
 
+    const handleRideCancelled = (data) => {
+      console.log("🚫 Received ride-cancelled event:", data);
+      setRide((currentRide) => {
+        if (!currentRide) return null;
+        const cancelledId = data?.rideId || data?.ride?._id;
+        if (!cancelledId || currentRide._id === cancelledId) {
+          setRidePopupPanel(false);
+          setConfirmRidePopupPanel(false);
+          toast.info("The rider cancelled this ride request");
+          return null;
+        }
+        return currentRide;
+      });
+    };
+
+    const handleRideTaken = (data) => {
+      console.log("🚕 Received ride-taken event:", data);
+      const myCaptainId = captainRef.current?._id?.toString();
+      // If this captain accepted the ride, ignore the broadcast so we don't clear our own ride state
+      if (
+        data?.acceptedByCaptainId &&
+        myCaptainId &&
+        data.acceptedByCaptainId.toString() === myCaptainId
+      ) {
+        console.log("🚕 Ignoring ride-taken because this captain accepted it");
+        return;
+      }
+
+      setRide((currentRide) => {
+        if (!currentRide) return null;
+        if (currentRide._id === data?.rideId) {
+          setRidePopupPanel(false);
+          setConfirmRidePopupPanel(false);
+          toast.info("Another captain accepted this ride");
+          return null;
+        }
+        return currentRide;
+      });
+    };
+
     socket.on("new-ride", handleNewRide);
+    socket.on("ride-cancelled", handleRideCancelled);
+    socket.on("ride-taken", handleRideTaken);
 
     return () => {
       socket.off("new-ride", handleNewRide);
+      socket.off("ride-cancelled", handleRideCancelled);
+      socket.off("ride-taken", handleRideTaken);
     };
   }, [socket]);
 
   async function confirmRide() {
+    if (!ride?._id) {
+      toast.error("No ride request to accept");
+      return;
+    }
+    if (isAccepting) return;
+    setIsAccepting(true);
+
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/rides/confirm`,
         {
           rideId: ride._id,
-          captainId: captain._id,
         },
         {
           headers: {
@@ -104,12 +180,25 @@ const CaptainHome = () => {
           },
         }
       );
-      toast.success("Ride accepted!");
+      if (response.status === 200) {
+        setRide(response.data);
+        setRidePopupPanel(false);
+        setConfirmRidePopupPanel(true);
+        toast.success("Ride accepted!");
+      }
     } catch (error) {
       console.error("Error confirming ride:", error);
-      toast.error(
-        error?.response?.data?.message || "Failed to accept ride. Please try again."
-      );
+      const errMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to accept ride. Please try again.";
+      toast.error(errMsg);
+      // Dismiss popup and clear ride so captain can receive other requests
+      setRidePopupPanel(false);
+      setConfirmRidePopupPanel(false);
+      setRide(null);
+    } finally {
+      setIsAccepting(false);
     }
   }
 
@@ -181,6 +270,7 @@ const CaptainHome = () => {
               setRidePopupPanel={setRidePopupPanel}
               setConfirmRidePopupPanel={setConfirmRidePopupPanel}
               confirmRide={confirmRide}
+              isAccepting={isAccepting}
             />
           ) : (
             <div className="space-y-6">
@@ -229,6 +319,7 @@ const CaptainHome = () => {
           setRidePopupPanel={setRidePopupPanel}
           setConfirmRidePopupPanel={setConfirmRidePopupPanel}
           confirmRide={confirmRide}
+          isAccepting={isAccepting}
         />
       </div>
 

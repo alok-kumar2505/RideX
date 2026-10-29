@@ -8,12 +8,26 @@ const VehiclePanel = (props) => {
           props.setVehiclePanel(false);
           props.setPanelOpen(true);
         }}
-        className="p-1 text-center w-full absolute top-0 cursor-pointer"
+        className="p-1 text-center w-full absolute top-0 cursor-pointer md:hidden"
       >
         <i className="text-3xl text-gray-400 ri-arrow-down-wide-fill"></i>
       </h5>
 
-      <h3 className="text-xl font-semibold mb-2">Choose a ride</h3>
+      {/* Large Screen Back Arrow */}
+      <div className="flex items-center gap-3 mb-3">
+        <button
+          type="button"
+          onClick={() => {
+            props.setVehiclePanel(false);
+            props.setPanelOpen(true);
+          }}
+          className="hidden md:flex w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 items-center justify-center transition cursor-pointer"
+          title="Back"
+        >
+          <i className="ri-arrow-left-line text-lg font-semibold"></i>
+        </button>
+        <h3 className="text-xl font-semibold">Choose a ride</h3>
+      </div>
       <div
         onClick={() => {
           props.selectVehicle("car");

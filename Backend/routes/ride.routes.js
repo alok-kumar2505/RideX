@@ -26,6 +26,13 @@ query("otp").notEmpty().isString().isLength({ max: 6,min: 6 }).withMessage("OTP 
 rideController.startRide);
 
 
+router.post(
+  "/cancel",
+  authMiddleware.authUser,
+  body("rideId").notEmpty().isString().withMessage("Ride ID is required"),
+  rideController.cancelRide
+);
+
 router.post("/end-ride",authMiddleware.authCaptain,body("rideId").isMongoId().notEmpty().isString().withMessage("Ride ID is required"),
 rideController.endRide);
 module.exports=router;

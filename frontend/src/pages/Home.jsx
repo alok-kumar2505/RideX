@@ -47,10 +47,22 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (socket && user?._id) {
+    if (!user?._id || !socket) return;
+
+    const emitJoin = () => {
+      console.log("🔌 Emitting join for rider:", user._id);
       socket.emit("join", { userId: user._id, userType: "user" });
+    };
+
+    if (socket.connected) {
+      emitJoin();
     }
-  }, [user, socket]);
+    socket.on("connect", emitJoin);
+
+    return () => {
+      socket.off("connect", emitJoin);
+    };
+  }, [user?._id, socket]);
 
   useEffect(() => {
     if (!socket) return;
@@ -316,6 +328,7 @@ const Home = () => {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
       );
+      setRide(response.data);
       toast.success("Ride requested! Searching for nearby captains...");
       return response.data;
     } catch (error) {
@@ -327,6 +340,29 @@ const Home = () => {
         error?.response?.data?.message || "Failed to create ride. Please try again."
       );
       throw error;
+    }
+  }
+
+  async function cancelCurrentRide() {
+    try {
+      if (ride?._id) {
+        const token = localStorage.getItem("token");
+        await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/rides/cancel`,
+          { rideId: ride._id },
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+        toast.info("Ride request cancelled");
+      }
+    } catch (error) {
+      console.warn("Cancel ride error:", error?.response?.data?.message || error.message);
+    } finally {
+      setRide(null);
+      setVehicleFound(false);
+      setConfirmRidePanel(false);
+      setVehiclePanel(true);
     }
   }
 
@@ -366,12 +402,17 @@ const Home = () => {
             />
           ) : vehicleFound ? (
             <LookingForDriver
+              key={ride?._id || "looking-driver-desktop"}
+              ride={ride}
               vehicleType={vehicleType}
               fare={fare}
               pickupLocation={pickupLocation}
               destination={destination}
+              createRide={createRide}
+              cancelCurrentRide={cancelCurrentRide}
               setVehicleFound={setVehicleFound}
               setConfirmRidePanel={setConfirmRidePanel}
+              setVehiclePanel={setVehiclePanel}
             />
           ) : confirmRidePanel ? (
             <ConfirmRide
@@ -609,12 +650,17 @@ const Home = () => {
         className="md:hidden fixed w-full z-20 bottom-0 px-3 py-6 translate-y-full bg-white pt-12"
       >
         <LookingForDriver
+          key={ride?._id || "looking-driver-mobile"}
+          ride={ride}
           vehicleType={vehicleType}
           fare={fare}
           pickupLocation={pickupLocation}
           destination={destination}
+          createRide={createRide}
+          cancelCurrentRide={cancelCurrentRide}
           setVehicleFound={setVehicleFound}
           setConfirmRidePanel={setConfirmRidePanel}
+          setVehiclePanel={setVehiclePanel}
         />
       </div>
 
