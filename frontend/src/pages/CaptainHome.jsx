@@ -18,10 +18,32 @@ const CaptainHome = () => {
   const [confirmRidePopupPanel, setConfirmRidePopupPanel] = useState(false);
   const ridePopupPanelRef = useRef(null);
   const confirmRidePopupPanelRef = useRef(null);
-  const { captain } = useContext(CaptainDataContext);
+  const { captain, setCaptain } = useContext(CaptainDataContext);
   const { socket } = useContext(SocketContext);
   const [ride, setRide] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchCaptainProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/captains/profile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (response.data?.captain) {
+          setCaptain(response.data.captain);
+        }
+      } catch (err) {
+        console.error("Error refreshing captain profile:", err);
+      }
+    };
+
+    fetchCaptainProfile();
+  }, [setCaptain]);
 
   const handleCaptainLogout = () => {
     localStorage.removeItem("token");

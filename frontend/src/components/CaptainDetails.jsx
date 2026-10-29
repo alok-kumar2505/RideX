@@ -17,25 +17,31 @@ const CaptainDetails = () => {
           </h5>
         </div>
         <div>
-          <h4 className="text-lg font-semibold">₹193</h4>
+          <h4 className="text-lg font-semibold">₹{captain?.earnings ?? 0}</h4>
           <p className="text-sm text-gray-600">Earned</p>
         </div>
       </div>
       <div className="flex mt-7 bg-gray-100 p-4 rounded-xl items-start justify-center gap-4">
         <div className="text-center">
           <i className="text-3xl mb-2 font-thin ri-timer-2-line"></i>
-          <h5 className="text-lg font-medium">10.5</h5>
+          <h5 className="text-lg font-medium">
+            {typeof captain?.hoursOnline === "number" ? captain.hoursOnline.toFixed(1) : "0.0"}
+          </h5>
           <p className="text-sm text-gray-600">Hours Online</p>
         </div>
         <div className="text-center">
           <i className="text-3xl mb-2 font-thin ri-speed-up-line"></i>
-          <h5 className="text-lg font-medium">10.5</h5>
-          <p className="text-sm text-gray-600">Hours Online</p>
+          <h5 className="text-lg font-medium">
+            {typeof captain?.totalDistance === "number" ? captain.totalDistance.toFixed(1) : "0.0"}
+          </h5>
+          <p className="text-sm text-gray-600">KM Driven</p>
         </div>
         <div className="text-center">
           <i className="text-3xl mb-2 font-thin ri-booklet-line"></i>
-          <h5 className="text-lg font-medium">10.5</h5>
-          <p className="text-sm text-gray-600">Hours Online</p>
+          <h5 className="text-lg font-medium">
+            {captain?.totalRides ?? 0}
+          </h5>
+          <p className="text-sm text-gray-600">Total Rides</p>
         </div>
       </div>
     </div>

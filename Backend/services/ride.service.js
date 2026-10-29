@@ -1,4 +1,5 @@
 const rideModel = require("../models/ride.model");
+const captainModel = require("../models/captain.model");
 const mapService = require("./maps.services");
 const crypto = require("crypto");
 const {sendMessageToSocketId} = require("../socket");
@@ -127,6 +128,17 @@ module.exports.startRide = async({rideId, otp, captain}) => {
     }
 
     await rideModel.findOneAndUpdate({_id: rideId}, {status: "completed"});
+
+    const rideDistanceKm = ride.distance ? Math.round((ride.distance / 1000) * 10) / 10 : 0;
+    const rideFare = ride.fare || 0;
+
+    await captainModel.findByIdAndUpdate(captain._id, {
+      $inc: {
+        earnings: rideFare,
+        totalRides: 1,
+        totalDistance: rideDistanceKm,
+      }
+    });
 
     sendMessageToSocketId(ride.user.socketId, {
       event: "ride-ended",

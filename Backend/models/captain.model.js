@@ -65,6 +65,26 @@ const captainSchema = new mongoose.Schema({
         type: Number,
       },
     },
+  earnings: {
+    type: Number,
+    default: 0,
+  },
+  hoursOnline: {
+    type: Number,
+    default: 0,
+  },
+  totalRides: {
+    type: Number,
+    default: 0,
+  },
+  totalDistance: {
+    type: Number,
+    default: 0,
+  },
+  lastActive: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 captainSchema.methods.generateAuthToken = function () {

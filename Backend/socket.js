@@ -24,22 +24,39 @@ function initializeSocket(server) {
             // console.log(`User ${userId} joined with socket ID: ${socket.id}`);
             
         }else if(userType==="captain"){
-            const captain=await captainModel.findByIdAndUpdate(userId,{socketId:socket.id}, {new: true});
+            const captain=await captainModel.findByIdAndUpdate(
+              userId,
+              {socketId:socket.id, lastActive: new Date()},
+              {new: true}
+            );
             // console.log(`Captain ${userId} joined with socket ID: ${socket.id}`);
         }
     });
 
     socket.on("update-location-captain", async(data) => {
         const {userId, location} = data;
-      const lat = Number(location?.ltd);
-      const lng = Number(location?.lng);
+        if (!userId || !location) return;
+        const lat = Number(location?.ltd);
+        const lng = Number(location?.lng);
 
-      
-       
-        const captain = await captainModel.findByIdAndUpdate(userId,{location:{
-        ltd: lat,
-        lng: lng
-        }});
+        const existingCaptain = await captainModel.findById(userId);
+        let hoursToAdd = 0;
+        const now = new Date();
+        if (existingCaptain && existingCaptain.lastActive) {
+          const diffMs = now - new Date(existingCaptain.lastActive);
+          if (diffMs > 0 && diffMs < 60000) {
+            hoursToAdd = diffMs / (1000 * 60 * 60);
+          }
+        }
+
+        await captainModel.findByIdAndUpdate(userId, {
+          location: {
+            ltd: lat,
+            lng: lng,
+          },
+          lastActive: now,
+          $inc: { hoursOnline: hoursToAdd },
+        });
     });
 
     socket.on("disconnect", () => {

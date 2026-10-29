@@ -1,6 +1,7 @@
-const captainService=require('../services/captain.service');
-const captainModel=require('../models/captain.model');
-const {validationResult}=require('express-validator');
+const captainService = require('../services/captain.service');
+const captainModel = require('../models/captain.model');
+const rideModel = require('../models/ride.model');
+const { validationResult } = require('express-validator');
 const blacklistTokenModel = require('../models/blacklistToken.model');
 
 
@@ -63,10 +64,46 @@ module.exports.loginCaptain=async(req,res,next)=>{
     res.status(200).json({token,captain});
 }
 
-module.exports.getCaptainProfile=async(req,res)=>{
-    // console.log(req.captain);
-    res.status(200).json({captain:req.captain});
-}
+module.exports.getCaptainProfile = async (req, res) => {
+    try {
+        const completedRides = await rideModel.find({
+            captain: req.captain._id,
+            status: 'completed',
+        });
+
+        const rideEarnings = completedRides.reduce((acc, r) => acc + (r.fare || 0), 0);
+        const rideDistance = completedRides.reduce((acc, r) => acc + (r.distance ? r.distance / 1000 : 0), 0);
+        const totalRidesCount = completedRides.length;
+
+        const currentEarnings = Math.max(req.captain.earnings || 0, rideEarnings);
+        const currentRides = Math.max(req.captain.totalRides || 0, totalRidesCount);
+        const currentDistance = Math.max(req.captain.totalDistance || 0, Math.round(rideDistance * 10) / 10);
+        const currentHours = Math.round((req.captain.hoursOnline || 0) * 10) / 10;
+
+        if (
+            (req.captain.earnings || 0) < currentEarnings ||
+            (req.captain.totalRides || 0) < currentRides ||
+            (req.captain.totalDistance || 0) < currentDistance
+        ) {
+            await captainModel.findByIdAndUpdate(req.captain._id, {
+                earnings: currentEarnings,
+                totalRides: currentRides,
+                totalDistance: currentDistance,
+            });
+        }
+
+        const captainData = req.captain.toObject ? req.captain.toObject() : { ...req.captain };
+        captainData.earnings = currentEarnings;
+        captainData.totalRides = currentRides;
+        captainData.totalDistance = currentDistance;
+        captainData.hoursOnline = currentHours;
+
+        res.status(200).json({ captain: captainData });
+    } catch (err) {
+        console.error("Error in getCaptainProfile:", err);
+        res.status(200).json({ captain: req.captain });
+    }
+};
 
 module.exports.logoutcaptain=async(req,res)=>{
     const token= req.cookies.token || req.headers.authorization?.split(' ')[1];
